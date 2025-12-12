@@ -89,7 +89,7 @@ aside {
     border-color: var(--primary-color);
     background-color: #f0f8ff;
     transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .tool-btn i {
@@ -126,11 +126,12 @@ aside {
 }
 
 .device-frame {
-    width: 375px; /* iPhone SE size reference */
+    width: 375px;
+    /* iPhone SE size reference */
     height: 667px;
     background: white;
     border-radius: 30px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     border: 8px solid #2c3e50;
     overflow: hidden;
     position: relative;
@@ -151,7 +152,8 @@ aside {
 /* Blocks */
 .block {
     position: relative;
-    border: 2px solid transparent; /* Selection border */
+    border: 2px solid transparent;
+    /* Selection border */
     transition: all 0.2s;
 }
 
@@ -165,18 +167,72 @@ aside {
 }
 
 /* Block Content Styles (Default) */
-.block-text { padding: 20px; word-break: break-all; }
-.block-image { width: 100%; display: block; }
-.block-image img { width: 100%; height: auto; display: block; }
-.block-video { padding: 0; }
-.block-video iframe { width: 100%; height: 210px; border: none; }
-.block-list { padding: 20px; }
-.list-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-.list-label { font-weight: 700; color: #555; }
-.block-schedule { padding: 20px; background: #f8f9fa; border-left: 4px solid var(--primary-color); margin: 10px; }
-.schedule-time { color: var(--primary-color); font-weight: 700; font-size: 0.9em; margin-bottom: 4px; }
-.schedule-title { font-weight: 700; font-size: 1.1em; }
-.block-divider { height: 2px; background: #eee; margin: 20px 0; }
+.block-text {
+    padding: 20px;
+    word-break: break-all;
+}
+
+.block-image {
+    width: 100%;
+    display: block;
+}
+
+.block-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.block-video {
+    padding: 0;
+}
+
+.block-video iframe {
+    width: 100%;
+    height: 210px;
+    border: none;
+}
+
+.block-list {
+    padding: 20px;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.list-label {
+    font-weight: 700;
+    color: #555;
+}
+
+.block-schedule {
+    padding: 20px;
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+    margin: 10px;
+}
+
+.schedule-time {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-bottom: 4px;
+}
+
+.schedule-title {
+    font-weight: 700;
+    font-size: 1.1em;
+}
+
+.block-divider {
+    height: 2px;
+    background: #eee;
+    margin: 20px 0;
+}
 
 /* Block Controls (Overlay) */
 .block-controls {
@@ -188,7 +244,7 @@ aside {
     background: white;
     padding: 4px;
     border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .block.active .block-controls {
@@ -208,8 +264,14 @@ aside {
     align-items: center;
     justify-content: center;
 }
-.control-btn:hover { background: #f0f0f0; }
-.btn-delete { color: var(--danger-color); }
+
+.control-btn:hover {
+    background: #f0f0f0;
+}
+
+.btn-delete {
+    color: var(--danger-color);
+}
 
 /* Properties Panel */
 #properties-content {
@@ -230,7 +292,9 @@ aside {
     color: #666;
 }
 
-.prop-input, .prop-select, .prop-textarea {
+.prop-input,
+.prop-select,
+.prop-textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid var(--border-color);
@@ -238,7 +302,11 @@ aside {
     font-size: 0.9rem;
     font-family: inherit;
 }
-.prop-textarea { resize: vertical; min-height: 80px; }
+
+.prop-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
 
 .empty-state {
     text-align: center;
@@ -250,14 +318,20 @@ aside {
 /* Modals */
 .modal {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
 }
-.modal.hidden { display: none; }
+
+.modal.hidden {
+    display: none;
+}
 
 .modal-content {
     background: white;
@@ -266,12 +340,21 @@ aside {
     width: 90%;
     max-width: 600px;
     text-align: center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
-.modal-content.sm { max-width: 400px; }
 
-.modal-content h2 { margin-bottom: 10px; }
-.modal-content p { color: #666; margin-bottom: 30px; }
+.modal-content.sm {
+    max-width: 400px;
+}
+
+.modal-content h2 {
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 30px;
+}
 
 .template-options {
     display: grid;
@@ -288,14 +371,24 @@ aside {
     transition: all 0.2s;
     text-align: center;
 }
+
 .template-card:hover {
     border-color: var(--primary-color);
     transform: translateY(-5px);
     background: white;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
-.template-card i { font-size: 2rem; color: var(--primary-color); margin-bottom: 10px; }
-.template-card span { display: block; font-weight: 600; }
+
+.template-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.template-card span {
+    display: block;
+    font-weight: 600;
+}
 
 /* Buttons */
 .primary-btn {
@@ -308,7 +401,10 @@ aside {
     cursor: pointer;
     width: 100%;
 }
-.primary-btn:hover { background: #357abd; }
+
+.primary-btn:hover {
+    background: #357abd;
+}
 
 .danger-btn {
     background: white;
@@ -319,7 +415,10 @@ aside {
     cursor: pointer;
     width: 100%;
 }
-.danger-btn:hover { background: #fff5f5; }
+
+.danger-btn:hover {
+    background: #fff5f5;
+}
 
 .secondary-btn {
     background: #95a5a6;
@@ -330,10 +429,19 @@ aside {
     cursor: pointer;
 }
 
-.modal-actions { margin-top: 20px; display: flex; gap: 10px; }
-.modal-actions button { flex: 1; }
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
 
-.hidden { display: none !important; }
+.modal-actions button {
+    flex: 1;
+}
+
+.hidden {
+    display: none !important;
+}
 
 /* Viewer Mode Specific */
 .viewer-container {
@@ -343,10 +451,12 @@ aside {
     overflow-y: auto;
     display: block;
 }
+
 #viewer-content {
+    width: 100%;
     max-width: 480px;
     margin: 0 auto;
     background: white;
     min-height: 100vh;
-    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
