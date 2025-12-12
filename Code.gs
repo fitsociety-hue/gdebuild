@@ -42,44 +42,6 @@ function doPost(e) {
     var action = params.action;
     
     if (action === "save") {
-      var id = savePage(params);
-      return ContentService.createTextOutput(JSON.stringify({
-        status: "success", 
-        id: id 
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-    
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: "Unknown action"
-    })).setMimeType(ContentService.MimeType.JSON);
-    
-  } catch (error) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
-      message: error.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// --- DATABASE LOGIC (Spreadsheet) ---
-
-function getSpreadsheet() {
-  // Option 1: Use specific ID (Recommended)
-  // return SpreadsheetApp.openById("YOUR_SPREADSHEET_ID");
-  
-  // Option 2: Use active (if bound) or create new for demo
-  var files = DriveApp.getFilesByName("MobileBuilderDB");
-  if (files.hasNext()) {
-    return SpreadsheetApp.open(files.next());
-  } else {
-    var ss = SpreadsheetApp.create("MobileBuilderDB");
-    ss.getSheets()[0].appendRow(["ID", "Title", "Password", "Data", "CreatedAt"]);
-    return ss;
-  }
-}
-
-    if (action === "save") {
       var result = savePage(params);
       return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     } else if (action === "delete") {
@@ -124,13 +86,11 @@ function savePage(params) {
     for (var i = 1; i < data.length; i++) {
         if (data[i][0] == params.id) {
             // Password verification
-            // Note: In production, password should be hashed. For this prototype, plaintext is used as per context.
             if (data[i][2] != params.password) {
                 return { status: "error", message: "Incorrect password" };
             }
             
             // Update inputs: Title(Col 1), Data(Col 3), Timestamp(Col 4)
-            // Rows are 1-indexed in getRange
             sheet.getRange(i + 1, 2).setValue(params.title || data[i][1]);
             sheet.getRange(i + 1, 4).setValue(params.data);
             sheet.getRange(i + 1, 5).setValue(now);
