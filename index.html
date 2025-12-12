@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Content Builder</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="app" class="builder-container">
+        <!-- 1. Left Sidebar: Toolbox -->
+        <aside class="toolbox">
+            <div class="header">
+                <h2>Tools</h2>
+            </div>
+            <div class="tools-grid">
+                <button class="tool-btn" data-type="text">
+                    <i class="fas fa-font"></i>
+                    <span>텍스트</span>
+                </button>
+                <button class="tool-btn" data-type="image">
+                    <i class="fas fa-image"></i>
+                    <span>이미지</span>
+                </button>
+                <button class="tool-btn" data-type="video">
+                    <i class="fab fa-youtube"></i>
+                    <span>영상</span>
+                </button>
+                <button class="tool-btn" data-type="schedule">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>일정</span>
+                </button>
+                <button class="tool-btn" data-type="list">
+                    <i class="fas fa-list-ul"></i>
+                    <span>사업안내</span>
+                </button>
+                <button class="tool-btn" data-type="divider">
+                    <i class="fas fa-minus"></i>
+                    <span>구분선</span>
+                </button>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btn-save" class="primary-btn"><i class="fas fa-save"></i> 저장하기</button>
+                <button id="btn-reset" class="danger-btn"><i class="fas fa-trash-alt"></i> 초기화</button>
+            </div>
+        </aside>
+
+        <!-- 2. Center: Canvas / Preview -->
+        <main class="canvas-area">
+            <div class="device-frame">
+                <div class="device-screen">
+                    <div id="canvas" class="canvas-content">
+                        <!-- Blocks will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 3. Right Sidebar: Properties -->
+        <aside class="properties-panel">
+            <div class="header">
+                <h2>Properties</h2>
+            </div>
+            <div id="properties-content">
+                <div class="empty-state">
+                    <p>블록을 선택하여<br>속성을 편집하세요.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Viewer Mode Container (Hidden by default in Editor) -->
+    <div id="viewer-app" class="viewer-container hidden">
+        <div id="viewer-content"></div>
+    </div>
+
+    <!-- Modal for Initial Template Selection -->
+    <div id="template-modal" class="modal">
+        <div class="modal-content">
+            <h2>새 프로젝트 시작</h2>
+            <p>만들고 싶은 콘텐츠 유형을 선택하세요.</p>
+            <div class="template-options">
+                <button class="template-card" data-template="newsletter">
+                    <i class="fas fa-newspaper"></i>
+                    <span>뉴스레터</span>
+                </button>
+                <button class="template-card" data-template="promotion">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>행사 홍보</span>
+                </button>
+                <button class="template-card" data-template="invitation">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>초대장</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Save/Password -->
+    <div id="save-modal" class="modal hidden">
+        <div class="modal-content sm">
+            <h3 id="save-modal-title">저장 및 발행</h3>
+            <div class="form-group">
+                <label>페이지 비밀번호 (4자리)</label>
+                <input type="password" id="save-password" maxlength="4" placeholder="1234">
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-save" class="primary-btn">발행하기</button>
+                <button id="cancel-save" class="secondary-btn">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
