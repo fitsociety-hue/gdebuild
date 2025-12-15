@@ -180,12 +180,23 @@ aside {
 .block-image {
     width: 100%;
     display: block;
+    background-color: #f0f0f0;
+    /* Default placeholder bg */
+    min-height: 200px;
+    /* Ensure minimum height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .block-image img {
     width: 100%;
     height: auto;
     display: block;
+    min-height: 200px;
+    /* Ensure image itself has height */
+    object-fit: contain;
+    /* Keep aspect ratio but fill */
 }
 
 .block-video {

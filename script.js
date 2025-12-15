@@ -656,8 +656,24 @@ window.handleImageUpload = function (input, blockId, key, isArray = false) {
     compressImage(file, 0.5, (result) => {
         if (isArray) {
             const block = state.blocks.find(b => b.id === blockId);
-            if (arr) {
-                arr.push(result);
+            if (!block) return;
+
+            let targetArray;
+            if (key.includes('.')) {
+                // e.g. 'content.images'
+                const keys = key.split('.');
+                if (!block[keys[0]]) block[keys[0]] = {};
+                // Ensure the nested property is an array
+                if (!Array.isArray(block[keys[0]][keys[1]])) block[keys[0]][keys[1]] = [];
+                targetArray = block[keys[0]][keys[1]];
+            } else {
+                // e.g. 'content' (for gallery)
+                if (!Array.isArray(block[key])) block[key] = [];
+                targetArray = block[key];
+            }
+
+            if (targetArray) {
+                targetArray.push(result);
                 renderBlocks();
                 renderProperties();
             }
