@@ -50,6 +50,9 @@ function doPost(e) {
     } else if (action === "delete") {
       var result = deletePage(params);
       return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
+    } else if (action === "verify") {
+      var result = verifyPassword(params);
+      return ContentService.createTextOutput(JSON.stringify(result)).setMimeType(ContentService.MimeType.JSON);
     }
     
     return ContentService.createTextOutput(JSON.stringify({
@@ -137,6 +140,24 @@ function deletePage(params) {
         }
     }
     return { status: "error", message: "Page not found" };
+}
+
+function verifyPassword(params) {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][0] == params.id) {
+       // Loose equality for number/string match
+       if (data[i][2] == params.password) {
+         return { status: "success", message: "Password match" };
+       } else {
+         return { status: "error", message: "Incorrect password" };
+       }
+    }
+  }
+  return { status: "error", message: "Page not found" };
 }
 
 function getPageById(id) {
