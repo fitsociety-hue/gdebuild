@@ -935,7 +935,7 @@ function renderProjectList(list) {
                 <h3>${item.title}</h3>
                 <p>${item.author || '작자미상'}</p>
                 <div class="card-actions">
-                     <button class="text-btn">편집</button>
+                     <button class="text-btn" onclick="event.stopPropagation(); loadProjectForEdit('${item.id}')">편집</button>
                 </div>
             </div>
         </div>
@@ -946,8 +946,14 @@ function renderProjectList(list) {
 async function loadProjectForEdit(id) {
     // Open Verify Modal instead of prompt
     state.pendingEditId = id;
-    document.getElementById('verify-password').value = '';
-    elems.verifyModal.classList.remove('hidden');
+
+    // Safety check if elems wasn't init properly
+    if (!elems.verifyModal) elems.verifyModal = document.getElementById('verify-modal');
+    const pwdInput = document.getElementById('verify-password');
+
+    if (pwdInput) pwdInput.value = '';
+    if (elems.verifyModal) elems.verifyModal.classList.remove('hidden');
+    else alert('Error: Verify Modal not found');
 }
 
 async function verifyAndLoad(id, password) {
