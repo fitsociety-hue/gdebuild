@@ -502,13 +502,42 @@ function setupEventListeners() {
         elems.newProjectModal.classList.add('hidden');
     }
 
-    // Toolbar
+    // Toolbar (Drag & Drop + Click)
     elems.tools.forEach(btn => {
+        // Click to add
         btn.onclick = () => {
             const type = btn.dataset.type;
             addBlock(type);
         };
+
+        // Drag Start
+        btn.ondragstart = (e) => {
+            e.dataTransfer.setData('text/plain', btn.dataset.type);
+            e.dataTransfer.effectAllowed = 'copy';
+        };
     });
+
+    // Canvas Drop Area
+    const canvasArea = document.querySelector('.device-screen');
+    
+    canvasArea.ondragover = (e) => {
+        e.preventDefault(); // Action must normally be prevented to allow drop
+        e.dataTransfer.dropEffect = 'copy';
+        canvasArea.style.backgroundColor = '#f0f8ff'; // Highlight
+    };
+
+    canvasArea.ondragleave = (e) => {
+        canvasArea.style.backgroundColor = ''; // Reset highlight
+    };
+
+    canvasArea.ondrop = (e) => {
+        e.preventDefault();
+        canvasArea.style.backgroundColor = '';
+        const type = e.dataTransfer.getData('text/plain');
+        if (type) {
+            addBlock(type);
+        }
+    };
 
     // Global Settings
     elems.globalBgColor.oninput = (e) => {
