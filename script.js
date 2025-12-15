@@ -43,7 +43,8 @@ const elems = {
     btnNewProject: document.getElementById('btn-new-project'),
     btnBackDashboard: document.getElementById('btn-back-dashboard'),
     globalBgColor: document.getElementById('global-bg-color'),
-    pageTitleInput: document.getElementById('current-page-title')
+    pageTitleInput: document.getElementById('current-page-title'),
+    newProjectModal: document.getElementById('new-project-modal')
 };
 
 // --- INITIALIZATION ---
@@ -68,6 +69,7 @@ function switchToViewerMode() {
     elems.editorApp.classList.add('hidden');
     elems.dashboardApp.classList.add('hidden');
     elems.viewerApp.classList.remove('hidden');
+    document.body.classList.add('viewer-mode');
 }
 
 function switchToEditorMode() {
@@ -251,15 +253,15 @@ function renderBlockContent(block) {
                         <a href="https://map.kakao.com/link/search/${query}" target="_blank" class="map-btn kakao">카카오맵</a>
                     </div>
                 </div>`;
-        case 'link':
-            return `
-                <div class="block-link">
-                    <a href="${block.content.url}" target="_blank" class="link-btn" style="background-color:${s.backgroundColor || '#4a90e2'}">${block.content.text}</a>
-                </div>`;
+            <div class="block-link">
+                <a href="${block.content.url}" target="_blank" class="neu-btn" style="color:${block.style?.color || '#333'}; background-color:${block.style?.backgroundColor || '#ffffff'}">
+                    ${block.content.text}
+                </a>
+            </div>`;
         case 'divider':
-            return `<div class="block-divider"></div>`;
+            return `< div class="block-divider" ></div > `;
         default:
-            return `<div>Unknown Block</div>`;
+            return `< div > Unknown Block</div > `;
     }
 }
 
@@ -272,7 +274,7 @@ function renderProperties() {
     if (!block) {
         html = '<div class="empty-state"><p>블록을 선택하여 속성을 편집하세요.</p></div>';
     } else {
-        html = `<div class="prop-group"><h3>${getBlockName(block.type)} 설정</h3></div>`;
+        html = `< div class="prop-group" > <h3>${getBlockName(block.type)} 설정</h3></div > `;
 
         // Common Text Styles
         if (['text', 'header'].includes(block.type)) {
@@ -287,7 +289,7 @@ function renderProperties() {
             html += createFileOrUrlInput('content', block.content);
         }
         else if (block.type === 'slide' || block.type === 'gallery') {
-            html += `<div class="prop-group"><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div>`;
+            html += `< div class="prop-group" ><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div > `;
             html += createMultiImageInput('content', block.content);
         }
         else if (block.type === 'video') {
@@ -318,45 +320,45 @@ function getBlockName(type) {
 
 function createInput(key, label, value, type = 'text', options = []) {
     if (type === 'select') {
-        const opts = options.map(o => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('');
+        const opts = options.map(o => `< option value = "${o}" ${ value === o ? 'selected' : '' }> ${ o }</option > `).join('');
         return `
-            <div class="prop-group">
+                < div class="prop-group" >
                 <label>${label}</label>
                 <select class="prop-select" onchange="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
                     ${opts}
                 </select>
-            </div>
-        `;
+            </div >
+                `;
     } else if (type === 'textarea') {
         // Basic HTML stripping/handling could go here if needed, but for now simple textarea
         return `
-            <div class="prop-group">
+                < div class="prop-group" >
                 <label>${label}</label>
                 <textarea class="prop-textarea" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">${value}</textarea>
-            </div>
-        `;
+            </div >
+                `;
     } else if (type === 'color') {
         return `
-             <div class="prop-group">
+                < div class="prop-group" >
                 <label>${label}</label>
                 <div style="display:flex; align-items:center;">
                     <input type="color" class="prop-color-picker" value="${value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
                 </div>
-            </div>
-        `
+            </div >
+                `
     } else {
         return `
-            <div class="prop-group">
+                < div class="prop-group" >
                 <label>${label}</label>
                 <input type="${type}" class="prop-input" value="${value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
             </div>
-        `;
+            `;
     }
 }
 
 function createFileOrUrlInput(key, value) {
     return `
-        <div class="prop-group">
+                < div class="prop-group" >
             <label>이미지 소스</label>
             <label class="file-upload-label">
                 <i class="fas fa-cloud-upload-alt"></i> 파일 선택
@@ -364,29 +366,29 @@ function createFileOrUrlInput(key, value) {
             </label>
             <input type="text" class="prop-input" placeholder="또는 이미지 URL 입력" value="${value.startsWith('data:') ? '' : value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
         </div>
-    `;
+            `;
 }
 
 function createMultiImageInput(key, values) {
     // Simplified for MVP: Just add button and list current URLs
-    let html = `<div style="margin-bottom:10px;">`;
+    let html = `< div style = "margin-bottom:10px;" > `;
     values.forEach((v, idx) => {
         html += `
-            <div style="display:flex; gap:5px; margin-bottom:5px;">
-                <img src="${v}" style="width:30px; height:30px; object-fit:cover;">
-                <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px;">
-                <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" style="padding:5px;">&times;</button>
-            </div>
-        `;
+                < div style = "display:flex; gap:5px; margin-bottom:5px;" >
+                    <img src="${v}" style="width:30px; height:30px; object-fit:cover;">
+                        <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px;">
+                            <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" style="padding:5px;">&times;</button>
+                        </div>
+                        `;
     });
-    html += `</div>`;
+                        html += `</div>`;
 
     html += `
-        <label class="file-upload-label">
-            <i class="fas fa-plus"></i> 이미지 추가 (파일)
-            <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, '${state.activeBlockId}', '${key}', true)">
-        </label>
-    `;
+                            < label class="file-upload-label" >
+                                <i class="fas fa-plus"></i> 이미지 추가(파일)
+                                    < input type = "file" accept = "image/*" style = "display:none;" onchange = "handleImageUpload(this, '${state.activeBlockId}', '${key}', true)" >
+        </label >
+                `;
     return html;
 }
 
@@ -448,18 +450,56 @@ window.handleImageUpload = function (input, blockId, key, isArray = false) {
 // --- EVENT LISTENERS ---
 
 function setupEventListeners() {
-    // Template Selection
-    document.querySelectorAll('.template-card').forEach(btn => {
+    // New Project Modal Logic
+    const toggleBtns = document.querySelectorAll('.toggle-btn');
+    toggleBtns.forEach(btn => {
         btn.onclick = () => {
-            const tpl = btn.dataset.template;
-            state.blocks = JSON.parse(JSON.stringify(templates[tpl]));
-            elems.modal.style.display = 'none';
-            // Also reset global style
-            state.globalStyle = { backgroundColor: '#ffffff' };
-            elems.globalBgColor.value = '#ffffff';
-            renderBlocks();
-        };
+            btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
     });
+
+    const typeBtns = document.querySelectorAll('.type-card');
+    typeBtns.forEach(btn => {
+        btn.onclick = () => {
+            typeBtns.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+    });
+
+    document.getElementById('btn-create-project').onclick = () => {
+        const title = document.getElementById('np-title').value;
+        const pwd = document.getElementById('np-password').value;
+        const author = document.getElementById('np-author').value;
+        
+        if (!title) return alert('제목을 입력해주세요.');
+        if (pwd.length < 4) return alert('비밀번호 4자리를 입력해주세요.');
+        if (!author) return alert('작성자용을 입력해주세요.');
+
+        const type = document.querySelector('.type-card.selected').dataset.type;
+        const category = document.querySelector('.toggle-btn.active').dataset.value;
+
+        // Set State
+        state.pageTitle = title;
+        state.pageId = null; // New project
+        state.password = pwd; // Store for first save (optional, or just pass to save)
+        state.author = author;
+        state.category = category;
+        state.globalStyle = { backgroundColor: '#C0D8C8' }; // Default Neuromorphic BG
+        
+        // Load Template
+        state.blocks = JSON.parse(JSON.stringify(templates[type]));
+        
+        elems.newProjectModal.classList.add('hidden');
+        elems.globalBgColor.value = '#C0D8C8';
+        elems.pageTitleInput.innerText = title;
+
+        renderBlocks();
+    };
+
+    document.getElementById('btn-close-new-project').onclick = () => {
+        elems.newProjectModal.classList.add('hidden');
+    }
 
     // Toolbar
     elems.tools.forEach(btn => {
@@ -480,16 +520,14 @@ function setupEventListeners() {
 
     // Dashboard navigation
     elems.btnNewProject.onclick = () => {
-        // Reset state
-        state.blocks = [];
-        state.pageId = null;
-        state.pageTitle = '새 프로젝트';
-        elems.pageTitleInput.innerText = '새 프로젝트';
-        elems.globalBgColor.value = '#ffffff';
-        state.globalStyle = { backgroundColor: '#ffffff' };
-
+        // Reset inputs
+        document.getElementById('np-title').value = '';
+        document.getElementById('np-password').value = '';
+        document.getElementById('np-author').value = '';
+        
         switchToEditorMode();
-        elems.modal.style.display = 'flex'; // Show template modal
+        elems.newProjectModal.classList.remove('hidden');
+        elems.newProjectModal.style.display = 'flex'; 
     };
     elems.btnBackDashboard.onclick = () => {
         if (confirm('저장하지 않은 내용은 사라집니다. 대시보드로 돌아가시겠습니까?')) {
@@ -531,7 +569,7 @@ async function loadDashboard() {
     elems.projectList.innerHTML = '<div class="loading-spinner">Loading...</div>';
 
     try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=list`);
+        const res = await fetch(`${ APPS_SCRIPT_URL }?action = list`);
         const json = await res.json();
 
         if (json.status === 'success') {
@@ -553,7 +591,7 @@ function renderProjectList(list) {
     }
 
     elems.projectList.innerHTML = list.map(item => `
-        <div class="project-card" onclick="loadProjectForEdit('${item.id}')">
+                < div class="project-card" onclick = "loadProjectForEdit('${item.id}')" >
             <button class="delete-btn-card" onclick="event.stopPropagation(); deleteProject('${item.id}');">
                 <i class="fas fa-trash"></i>
             </button>
@@ -562,14 +600,14 @@ function renderProjectList(list) {
                 <h3>${item.title}</h3>
                 <p>${new Date(item.createdAt).toLocaleDateString()}</p>
             </div>
-        </div>
-    `).join('');
+        </div >
+                `).join('');
 }
 
 async function loadProjectForEdit(id) {
     // Fetch full data
     try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
+        const res = await fetch(`${ APPS_SCRIPT_URL }?action = get & id=${ id } `);
         const json = await res.json();
         if (json.status === 'success') {
             const data = JSON.parse(json.data.data);
@@ -660,7 +698,7 @@ async function loadPageData(id) {
         return;
     }
     try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
+        const res = await fetch(`${ APPS_SCRIPT_URL }?action = get & id=${ id } `);
         const json = await res.json();
         if (json.status === 'success') {
             const data = JSON.parse(json.data.data);
@@ -679,33 +717,33 @@ async function loadPageData(id) {
 // --- PUBLISH & SHARES ---
 
 function showPublishResult(id) {
-    const url = `${window.location.origin}${window.location.pathname}?id=${id}`;
+    const url = `${ window.location.origin }${ window.location.pathname }?id = ${ id } `;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
 
-    document.getElementById('share-url').value = url;
-    document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
+            document.getElementById('share-url').value = url;
+            document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
 
-    elems.publishModal.classList.remove('hidden');
-}
-
-window.copyUrl = function () {
-    const input = document.getElementById('share-url');
-    input.select();
-    document.execCommand('copy');
-    alert('URL이 복사되었습니다.');
-}
-
-window.downloadQR = function () {
-    const img = document.querySelector('#qr-code-img img');
-    if (img) {
-        const a = document.createElement('a');
-        a.href = img.src;
-        a.download = 'qrcode.png';
-        a.click();
+            elems.publishModal.classList.remove('hidden');
     }
-}
 
-// Start
-init();
+    window.copyUrl = function () {
+        const input = document.getElementById('share-url');
+        input.select();
+        document.execCommand('copy');
+        alert('URL이 복사되었습니다.');
+    }
+
+    window.downloadQR = function () {
+        const img = document.querySelector('#qr-code-img img');
+        if (img) {
+            const a = document.createElement('a');
+            a.href = img.src;
+            a.download = 'qrcode.png';
+            a.click();
+        }
+    }
+
+    // Start
+    init();
 // Load Dashboard immediately if in dashboard mode
 // (Handled in init)

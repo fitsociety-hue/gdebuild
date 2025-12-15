@@ -343,6 +343,11 @@ aside {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
+.modal-content.md {
+    max-width: 500px;
+    text-align: left;
+}
+
 .modal-content.sm {
     max-width: 400px;
 }
@@ -772,7 +777,149 @@ aside {
     color: #666;
 }
 
-.file-upload-label:hover {
-    background: #eee;
-    border-color: #999;
+/* New Project Modal Styles */
+.new-project-form .form-group {
+    margin-bottom: 20px;
+}
+
+.new-project-form label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.new-project-form input[type="text"],
+.new-project-form input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.toggle-group {
+    display: flex;
+    gap: 10px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+}
+
+.toggle-btn.active {
+    border-color: var(--primary-color);
+    background: #e6f7ff;
+    color: var(--primary-color);
+}
+
+.type-grid {
+    display: flex;
+    gap: 10px;
+}
+
+.type-card {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    color: #666;
+}
+
+.type-card.selected {
+    border-color: var(--primary-color);
+    background: #e6f7ff;
+    color: var(--primary-color);
+}
+
+
+/* Neuromorphism & Viewer UI Update */
+body.viewer-mode {
+    background-color: #C0D8C8;
+    /* Soft Green Background */
+}
+
+.viewer-container {
+    background-color: transparent;
+    /* Let body bg show */
+}
+
+#viewer-content {
+    background-color: transparent;
+    /* Transparent to show global style or body */
+    box-shadow: none;
+    padding-bottom: 80px;
+    /* Space for footer */
+}
+
+/* Neuromorphic Link Buttons */
+.neu-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: #333;
+    text-decoration: none;
+    font-weight: 700;
+    margin-bottom: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.neu-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Viewer Footer */
+.viewer-footer {
+    position: fixed;
+    bottom: 30px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    /* Let clicks pass through if needed */
+    z-index: 100;
+}
+
+.make-page-btn {
+    pointer-events: auto;
+    background: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    transition: transform 0.2s;
+}
+
+.make-page-btn:hover {
+    transform: scale(1.05);
+}
+
+/* Update Modal Content to remove default centering for forms */
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 20px;
 }

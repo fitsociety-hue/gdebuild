@@ -111,26 +111,55 @@
     <!-- Viewer Mode Container (Hidden by default in Editor) -->
     <div id="viewer-app" class="viewer-container hidden">
         <div id="viewer-content"></div>
+        <div class="viewer-footer">
+            <button class="make-page-btn" onclick="location.href='index.html'">
+                <i class="fas fa-magic"></i> MY 페이지 무료로 만들기 >
+            </button>
+        </div>
     </div>
 
     <!-- Modal for Initial Template Selection -->
-    <div id="template-modal" class="modal">
-        <div class="modal-content">
-            <h2>새 프로젝트 시작</h2>
-            <p>만들고 싶은 콘텐츠 유형을 선택하세요.</p>
-            <div class="template-options">
-                <button class="template-card" data-template="newsletter">
-                    <i class="fas fa-newspaper"></i>
-                    <span>뉴스레터</span>
-                </button>
-                <button class="template-card" data-template="promotion">
-                    <i class="fas fa-bullhorn"></i>
-                    <span>행사 홍보</span>
-                </button>
-                <button class="template-card" data-template="invitation">
-                    <i class="fas fa-envelope-open-text"></i>
-                    <span>초대장</span>
-                </button>
+    <!-- Dynamic New Project Modal -->
+    <div id="new-project-modal" class="modal hidden">
+        <div class="modal-content md">
+            <h2>새 프로젝트 만들기</h2>
+            <div class="new-project-form">
+                <div class="form-group">
+                    <label>제목</label>
+                    <input type="text" id="np-title" placeholder="예: 5월 가정의 달 행사 초대">
+                </div>
+
+                <div class="form-group">
+                    <label>분류</label>
+                    <div class="toggle-group">
+                        <button class="toggle-btn active" data-value="personal">개인</button>
+                        <button class="toggle-btn" data-value="team">팀</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>유형 선택</label>
+                    <div class="type-grid">
+                        <button class="type-card selected" data-type="newsletter">뉴스레터</button>
+                        <button class="type-card" data-type="promotion">홍보</button>
+                        <button class="type-card" data-type="invitation">초대장</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>비밀번호 (4자리, 숫자 방지용)</label>
+                    <input type="password" id="np-password" maxlength="4" placeholder="숫자 4자리">
+                </div>
+
+                <div class="form-group">
+                    <label>작성자명 또는 팀명</label>
+                    <input type="text" id="np-author" placeholder="예: 복지센터">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="secondary-btn" id="btn-close-new-project">취소</button>
+                    <button class="primary-btn" id="btn-create-project">생성하기</button>
+                </div>
             </div>
         </div>
     </div>
