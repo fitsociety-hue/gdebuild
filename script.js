@@ -221,7 +221,11 @@ function renderBlockContent(block) {
         case 'text':
             return `<div style="${commonStyle}">${block.content}</div>`;
         case 'image':
-            return `<div class="block-image"><img src="${block.content}" alt="Image" style="width:100%; display:block;"></div>`;
+            const imgContent = `<div class="block-image"><img src="${block.content}" alt="Image" style="width:100%; display:block;"></div>`;
+            if (block.link) {
+                return `<a href="${block.link}" target="_blank" style="display:block; text-decoration:none;">${imgContent}</a>`;
+            }
+            return imgContent;
         case 'slide':
             const slides = block.content.map(src => `<div class="slide-item"><img src="${src}"></div>`).join('');
             return `<div class="block-slide"><div class="slide-container">${slides}</div></div>`;
@@ -294,6 +298,7 @@ function renderProperties() {
         }
         else if (block.type === 'image') {
             html += createFileOrUrlInput('content', block.content);
+            html += createInput('link', '클릭 시 이동 URL (하이퍼링크)', block.link || '');
         }
         else if (block.type === 'slide' || block.type === 'gallery') {
             html += `<div class="prop-group"><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div>`;
@@ -424,18 +429,63 @@ window.removeArrayItem = function (id, key, index) {
     }
 }
 
+// IMAGE RESIZE UTILS
+function compressImage(file, maxSizeMB, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Initial dimensions
+            let width = img.width;
+            let height = img.height;
+
+            // Max dimension constraint (e.g. 1920) can also be used, 
+            // but let's focus on quality reduction loop or simple scale down first.
+            // Simplified approach: Scale down if very large, then use quality.
+
+            const MAX_DIM = 2000;
+            if (width > MAX_DIM || height > MAX_DIM) {
+                if (width > height) {
+                    height *= MAX_DIM / width;
+                    width = MAX_DIM;
+                } else {
+                    width *= MAX_DIM / height;
+                    height = MAX_DIM;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Loop for quality reduction
+            let quality = 0.9;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+            // Reduce quality until it fits, but don't go too low
+            while (dataUrl.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
+                quality -= 0.1;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            callback(dataUrl);
+        }
+    }
+}
+
 window.handleImageUpload = function (input, blockId, key, isArray = false) {
     const file = input.files[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024) { // 1MB limit check
-        alert('이미지 파일 크기는 1MB 이하여야 합니다.');
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const result = e.target.result;
+    // Use compressImage to ensure < 1MB (or reasonably small)
+    // Google Sheets cell limit is 50,000 chars, but script properties/post data handles more.
+    // However, keeping it around 500KB is safe.
+    compressImage(file, 0.5, (result) => {
         if (isArray) {
             const block = state.blocks.find(b => b.id === blockId);
             if (block && Array.isArray(block.content)) {
@@ -445,11 +495,9 @@ window.handleImageUpload = function (input, blockId, key, isArray = false) {
             }
         } else {
             updateBlockProperty(blockId, key, result);
-            // Refresh prop panel to show base64 handled
             renderProperties();
         }
-    };
-    reader.readAsDataURL(file);
+    });
 };
 
 
@@ -688,8 +736,23 @@ function renderProjectList(list) {
 }
 
 async function loadProjectForEdit(id) {
-    // Fetch full data
+    // Password Verification
+    const password = prompt("편집하려면 비밀번호를 입력하세요:");
+    if (!password) return; // Cancelled
+
     try {
+        const verifyRes = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'verify', id: id, password: password })
+        });
+        const verifyJson = await verifyRes.json();
+
+        if (verifyJson.status !== 'success') {
+            alert('비밀번호가 일치하지 않습니다.');
+            return;
+        }
+
+        // Proceed if password correct
         const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
         const json = await res.json();
         if (json.status === 'success') {
@@ -700,6 +763,7 @@ async function loadProjectForEdit(id) {
             state.author = json.data.author;
             state.category = json.data.category;
             state.pageId = json.data.id;
+            state.password = password; // Remember successful password for future save?
 
             // Sync UI
             elems.pageTitleInput.innerText = state.pageTitle;
@@ -709,7 +773,8 @@ async function loadProjectForEdit(id) {
             renderBlocks();
         }
     } catch (e) {
-        alert('로드 실패');
+        alert('로드 실패, 네트워크 오류');
+        console.error(e);
     }
 }
 
@@ -800,37 +865,3 @@ async function loadPageData(id) {
         document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
     }
 }
-
-// --- PUBLISH & SHARES ---
-
-function showPublishResult(id) {
-    const url = `${window.location.origin}${window.location.pathname}?id=${id}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-
-    document.getElementById('share-url').value = url;
-    document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
-
-    elems.publishModal.classList.remove('hidden');
-}
-
-window.copyUrl = function () {
-    const input = document.getElementById('share-url');
-    input.select();
-    document.execCommand('copy');
-    alert('URL이 복사되었습니다.');
-}
-
-window.downloadQR = function () {
-    const img = document.querySelector('#qr-code-img img');
-    if (img) {
-        const a = document.createElement('a');
-        a.href = img.src;
-        a.download = 'qrcode.png';
-        a.click();
-    }
-}
-
-// Start
-document.addEventListener('DOMContentLoaded', () => {
-    init();
-});
