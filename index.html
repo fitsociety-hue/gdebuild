@@ -4,8 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Content Builder</title>
-    <link rel="stylesheet" href="style.css">
+    <title>
+        <?= metaTitle ? metaTitle : 'Mobile Content Builder' ?>
+    </title>
+
+    <!-- Open Graph for Social Sharing -->
+    <meta property="og:title" content="<?= metaTitle ? metaTitle : 'Mobile Content Builder' ?>" />
+    <meta property="og:description" content="<?= metaDescription ? metaDescription : '강동어울림복지관에서 안내합니다.' ?>" />
+    <meta property="og:image"
+        content="<?= metaImage ? metaImage : 'https://via.placeholder.com/1200x630?text=Mobile+Builder' ?>" />
+    <meta property="og:type" content="website" />
+
+    <!-- Absolute Path to CSS for Apps Script Compatibility -->
+    <link rel="stylesheet" href="https://fitsociety-hue.github.io/gdebuild/style.css">
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap"
         rel="stylesheet">
@@ -233,7 +245,8 @@
         </section>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Absolute Path to JS for Apps Script Compatibility -->
+    <script src="https://fitsociety-hue.github.io/gdebuild/script.js"></script>
 </body>
 
 </html>
