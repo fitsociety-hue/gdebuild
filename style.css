@@ -460,3 +460,319 @@ aside {
     min-height: 100vh;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
+
+/* --- DASHBOARD STYLES --- */
+.dashboard-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #f5f7fa;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.dashboard-header {
+    background: white;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-header h1 {
+    font-size: 24px;
+    margin: 0;
+    color: #333;
+}
+
+.dashboard-header p {
+    margin: 5px 0 0;
+    color: #666;
+    font-size: 14px;
+}
+
+.dashboard-content {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tab-btn {
+    border: none;
+    background: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn.active {
+    color: #4a90e2;
+    border-bottom-color: #4a90e2;
+    font-weight: 700;
+}
+
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.project-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+    justify-content: space-between;
+}
+
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.project-card .card-icon {
+    font-size: 40px;
+    color: #e0e0e0;
+    align-self: center;
+    margin-top: 20px;
+}
+
+.project-card .card-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.project-card .card-info p {
+    margin: 0;
+    font-size: 12px;
+    color: #888;
+}
+
+.project-card .delete-btn-card {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border: none;
+    background: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: #ccc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border: 1px solid #eee;
+}
+
+.project-card .delete-btn-card:hover {
+    color: #ff4d4f;
+    border-color: #ff4d4f;
+}
+
+/* --- CANVAS & NEW BLOCKS --- */
+.canvas-header-controls {
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 10px;
+}
+
+.canvas-header-controls h3 {
+    margin: 0;
+    font-size: 16px;
+    flex: 1;
+    padding: 5px;
+    border: 1px dashed transparent;
+}
+
+.canvas-header-controls h3:hover {
+    border-color: #ccc;
+    background: #f9f9f9;
+}
+
+/* Slide Block */
+.block-slide {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+.slide-container {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.slide-container::-webkit-scrollbar {
+    display: none;
+}
+
+.slide-item {
+    min-width: 100%;
+    scroll-snap-align: center;
+}
+
+.slide-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Gallery Block */
+.block-gallery {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    aspect-ratio: 1/1;
+    border-radius: 4px;
+}
+
+/* Map Block */
+.block-map {
+    padding: 10px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.map-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.map-address {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.map-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.map-btn {
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+.map-btn.naver {
+    background-color: #2DB400;
+}
+
+.map-btn.kakao {
+    background-color: #FEE500;
+    color: #3c1e1e;
+}
+
+/* Link Block */
+.block-link {
+    text-align: center;
+    padding: 10px;
+}
+
+.link-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background-color: #4a90e2;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: opacity 0.2s;
+}
+
+.link-btn:hover {
+    opacity: 0.9;
+}
+
+/* Publish Modal */
+.publish-body {
+    text-align: center;
+    padding: 20px 0;
+}
+
+#qr-code-img img {
+    max-width: 150px;
+    margin: 10px auto;
+    display: block;
+    border: 1px solid #eee;
+    padding: 10px;
+}
+
+.url-copy-box {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.url-copy-box input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+/* Property Inputs */
+.prop-color-picker {
+    width: 100%;
+    height: 40px;
+    padding: 2px;
+    border: 1px solid #ddd;
+}
+
+.file-upload-label {
+    display: block;
+    padding: 10px;
+    border: 1px dashed #ccc;
+    text-align: center;
+    cursor: pointer;
+    background: #f9f9f9;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.file-upload-label:hover {
+    background: #eee;
+    border-color: #999;
+}

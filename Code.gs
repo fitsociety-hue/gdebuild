@@ -21,6 +21,9 @@ function doGet(e) {
     } else {
       output.setContent(JSON.stringify({ status: "error", message: "Page not found" }));
     }
+  } else if (action === "list") {
+    var list = getProjectList();
+    output.setContent(JSON.stringify({ status: "success", data: list }));
   } else {
     output.setContent(JSON.stringify({ status: "error", message: "Invalid action" }));
   }
@@ -150,4 +153,23 @@ function getPageById(id) {
     }
   }
   return null;
+}
+
+function getProjectList() {
+  var ss = getSpreadsheet();
+  var sheet = ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  var list = [];
+  
+  // Skip header, iterate to collect metadata only
+  for (var i = 1; i < data.length; i++) {
+    list.push({
+      id: data[i][0],
+      title: data[i][1],
+      createdAt: data[i][4]
+    });
+  }
+  
+  // Return most recent first
+  return list.reverse();
 }

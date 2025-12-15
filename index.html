@@ -18,9 +18,17 @@
         <!-- 1. Left Sidebar: Toolbox -->
         <aside class="toolbox">
             <div class="header">
-                <h2>Tools</h2>
+                <div class="header-top">
+                    <button id="btn-back-dashboard" class="icon-btn" title="대시보드로 이동"><i
+                            class="fas fa-arrow-left"></i></button>
+                    <h2>블록 도구</h2>
+                </div>
             </div>
             <div class="tools-grid">
+                <button class="tool-btn" data-type="header">
+                    <i class="fas fa-heading"></i>
+                    <span>헤드(제목)</span>
+                </button>
                 <button class="tool-btn" data-type="text">
                     <i class="fas fa-font"></i>
                     <span>텍스트</span>
@@ -29,32 +37,55 @@
                     <i class="fas fa-image"></i>
                     <span>이미지</span>
                 </button>
-                <button class="tool-btn" data-type="video">
-                    <i class="fab fa-youtube"></i>
-                    <span>영상</span>
+                <button class="tool-btn" data-type="slide">
+                    <i class="fas fa-images"></i>
+                    <span>슬라이드</span>
                 </button>
-                <button class="tool-btn" data-type="schedule">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span>일정</span>
+                <button class="tool-btn" data-type="gallery">
+                    <i class="fas fa-th-large"></i>
+                    <span>갤러리</span>
+                </button>
+                <button class="tool-btn" data-type="video">
+                    <i class="fas fa-video"></i>
+                    <span>영상</span>
                 </button>
                 <button class="tool-btn" data-type="list">
                     <i class="fas fa-list-ul"></i>
                     <span>사업안내</span>
                 </button>
+                <button class="tool-btn" data-type="schedule">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>일정</span>
+                </button>
+                <button class="tool-btn" data-type="map">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>지도</span>
+                </button>
+                <button class="tool-btn" data-type="link">
+                    <i class="fas fa-link"></i>
+                    <span>링크 버튼</span>
+                </button>
+                <!--
                 <button class="tool-btn" data-type="divider">
                     <i class="fas fa-minus"></i>
                     <span>구분선</span>
                 </button>
+                -->
             </div>
 
             <div class="action-buttons">
-                <button id="btn-save" class="primary-btn"><i class="fas fa-save"></i> 저장하기</button>
-                <button id="btn-reset" class="danger-btn"><i class="fas fa-trash-alt"></i> 초기화</button>
+                <button id="btn-save" class="primary-btn"><i class="fas fa-save"></i> 저장</button>
+                <button id="btn-publish" class="success-btn"><i class="fas fa-share-square"></i> 게시</button>
             </div>
         </aside>
 
         <!-- 2. Center: Canvas / Preview -->
         <main class="canvas-area">
+            <div class="canvas-header-controls">
+                <span class="label">배경색:</span>
+                <input type="color" id="global-bg-color" value="#ffffff" title="전체 배경 색상 변경">
+                <h3 id="current-page-title" contenteditable="true">제목 없음</h3>
+            </div>
             <div class="device-frame">
                 <div class="device-screen">
                     <div id="canvas" class="canvas-content">
@@ -113,10 +144,70 @@
                 <input type="password" id="save-password" maxlength="4" placeholder="1234">
             </div>
             <div class="modal-actions">
-                <button id="confirm-save" class="primary-btn">발행하기</button>
+                <button id="confirm-save" class="primary-btn">확인</button>
                 <button id="cancel-save" class="secondary-btn">취소</button>
             </div>
         </div>
+    </div>
+
+    <!-- Modal for Publish Result (QR & URL) -->
+    <div id="publish-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="publish-title">게시 완료</h3>
+                <button class="close-modal-btn"
+                    onclick="document.getElementById('publish-modal').classList.add('hidden')"><i
+                        class="fas fa-times"></i></button>
+            </div>
+
+            <div class="publish-body">
+                <div class="qr-section">
+                    <p>QR 코드</p>
+                    <div id="qr-code-img"></div>
+                    <button class="secondary-btn btn-sm" onclick="downloadQR()">
+                        <i class="fas fa-download"></i> QR 코드 다운로드
+                    </button>
+                </div>
+                <div class="url-section">
+                    <p>공유 URL</p>
+                    <div class="url-copy-box">
+                        <input type="text" id="share-url" readonly>
+                        <button class="primary-btn" onclick="copyUrl()">
+                            <i class="far fa-copy"></i> 복사
+                        </button>
+                    </div>
+                    <p class="help-text">이 URL을 카카오톡이나 소셜 미디어에 공유하세요</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard-app" class="dashboard-container hidden">
+        <header class="dashboard-header">
+            <div class="brand">
+                <h1>모바일 콘텐츠 통합 관리</h1>
+                <p>만들어진 콘텐츠를 관리하고 새로운 프로젝트를 시작하세요.</p>
+            </div>
+            <div class="header-actions">
+                <button id="btn-new-project" class="primary-btn scale-btn">
+                    <i class="fas fa-plus"></i> 새 프로젝트 만들기
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard-content">
+            <div class="tabs">
+                <button class="tab-btn active">전체</button>
+                <button class="tab-btn">개인</button>
+                <button class="tab-btn">팀</button>
+            </div>
+
+            <div id="project-list" class="project-grid">
+                <!-- Projects will be loaded here -->
+                <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+            </div>
+        </section>
     </div>
 
     <script src="script.js"></script>
