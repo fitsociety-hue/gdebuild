@@ -928,3 +928,36 @@ body.viewer-mode {
     text-align: center;
     margin-bottom: 20px;
 }
+
+/* Dashboard Card Meta */
+.card-info .meta {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-info .date {
+    font-size: 11px;
+    color: #999;
+    margin-top: auto;
+}
+
+.badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.badge-personal {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.badge-team {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
