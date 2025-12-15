@@ -73,7 +73,7 @@ function getSpreadsheet() {
     return SpreadsheetApp.open(files.next());
   } else {
     var ss = SpreadsheetApp.create("MobileBuilderDB");
-    ss.getSheets()[0].appendRow(["ID", "Title", "Password", "Data", "CreatedAt"]);
+    ss.getSheets()[0].appendRow(["ID", "Title", "Password", "Data", "CreatedAt", "Author", "Category"]);
     return ss;
   }
 }
@@ -97,6 +97,8 @@ function savePage(params) {
             sheet.getRange(i + 1, 2).setValue(params.title || data[i][1]);
             sheet.getRange(i + 1, 4).setValue(params.data);
             sheet.getRange(i + 1, 5).setValue(now);
+            sheet.getRange(i + 1, 6).setValue(params.author || data[i][5]);
+            sheet.getRange(i + 1, 7).setValue(params.category || data[i][6]);
             
             return { status: "success", id: params.id, message: "Updated successfully" };
         }
@@ -111,7 +113,9 @@ function savePage(params) {
     params.title || "Untitled",
     params.password, 
     params.data, 
-    now
+    now,
+    params.author,
+    params.category
   ]);
   
   return { status: "success", id: id, message: "Created successfully" };
@@ -148,7 +152,9 @@ function getPageById(id) {
         title: data[i][1],
         // password: data[i][2], // Never return password
         data: data[i][3],
-        createdAt: data[i][4]
+        createdAt: data[i][4],
+        author: data[i][5],
+        category: data[i][6]
       };
     }
   }
@@ -166,7 +172,9 @@ function getProjectList() {
     list.push({
       id: data[i][0],
       title: data[i][1],
-      createdAt: data[i][4]
+      createdAt: data[i][4],
+      author: data[i][5],
+      category: data[i][6]
     });
   }
   

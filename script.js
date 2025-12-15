@@ -648,6 +648,8 @@ async function loadProjectForEdit(id) {
             state.blocks = data.blocks || [];
             state.globalStyle = data.globalStyle || { backgroundColor: '#ffffff' };
             state.pageTitle = json.data.title;
+            state.author = json.data.author;
+            state.category = json.data.category;
             state.pageId = json.data.id;
 
             // Sync UI
@@ -691,7 +693,9 @@ async function savePage(password) {
             blocks: state.blocks,
             globalStyle: state.globalStyle
         }),
-        title: state.pageTitle
+        title: state.pageTitle,
+        author: state.author,
+        category: state.category
     };
 
     if (state.pageId) payload.id = state.pageId;
