@@ -10,7 +10,7 @@
  */
 
 // --- CONFIGURATION ---
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx2ZGd1l3vXsAjs2rFCaad9GodQUHPSSQhNNlCOPkuIsEk6UNvwkA9bZklHKbzegKUlCA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxgeSIPMkXjXirUtUxJtaX2-KZ11rQ4WPPWwaUBT8AEeickKB97V0neq0ZkJrPFldFBA/exec';
 
 // --- STATE MANAGEMENT ---
 const state = {
