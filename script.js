@@ -28,35 +28,39 @@ const state = {
 };
 
 // --- DOM ELEMENTS ---
-const elems = {
-    canvas: document.getElementById('canvas'),
-    propPanel: document.getElementById('properties-content'),
-    tools: document.querySelectorAll('.tool-btn'),
-    modal: document.getElementById('template-modal'),
-    saveModal: document.getElementById('save-modal'),
-    publishModal: document.getElementById('publish-modal'),
-    btnSave: document.getElementById('btn-save'),
-    btnPublish: document.getElementById('btn-publish'),
-    btnSaveConfirm: document.getElementById('confirm-save'),
-    btnSaveCancel: document.getElementById('cancel-save'),
-    viewerApp: document.getElementById('viewer-app'),
-    editorApp: document.getElementById('app'),
-    dashboardApp: document.getElementById('dashboard-app'),
-    projectList: document.getElementById('project-list'),
-    btnNewProject: document.getElementById('btn-new-project'),
-    btnBackDashboard: document.getElementById('btn-back-dashboard'),
-    globalBgColor: document.getElementById('global-bg-color'),
-    pageTitleInput: document.getElementById('current-page-title'),
-    newProjectModal: document.getElementById('new-project-modal'),
-    tabBtns: document.querySelectorAll('.tab-btn')
-};
+// Will be initialized in init() or accessed dynamically to ensure DOM is ready
+let elems = {};
 
 // --- INITIALIZATION ---
 function init() {
+    // Initialize Elements
+    elems = {
+        canvas: document.getElementById('canvas'),
+        propPanel: document.getElementById('properties-content'),
+        tools: document.querySelectorAll('.tool-btn'),
+        modal: document.getElementById('template-modal'),
+        saveModal: document.getElementById('save-modal'),
+        publishModal: document.getElementById('publish-modal'),
+        btnSave: document.getElementById('btn-save'),
+        btnPublish: document.getElementById('btn-publish'),
+        btnSaveConfirm: document.getElementById('confirm-save'),
+        btnSaveCancel: document.getElementById('cancel-save'),
+        viewerApp: document.getElementById('viewer-app'),
+        editorApp: document.getElementById('app'),
+        dashboardApp: document.getElementById('dashboard-app'),
+        projectList: document.getElementById('project-list'),
+        btnNewProject: document.getElementById('btn-new-project'),
+        btnBackDashboard: document.getElementById('btn-back-dashboard'),
+        globalBgColor: document.getElementById('global-bg-color'),
+        pageTitleInput: document.getElementById('current-page-title'),
+        newProjectModal: document.getElementById('new-project-modal'),
+        tabBtns: document.querySelectorAll('.tab-btn')
+    };
+
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
-    setupEventListeners(); // Setup events for both modes to ensure buttons work if switched
+    setupEventListeners(); // Setup events for both modes
 
     if (id) {
         // Viewer Mode
@@ -126,7 +130,7 @@ function addBlock(type) {
         id: generateUUID(),
         type: type,
         content: getDefaultContent(type),
-        style: {} // Will be populated with defaults if needed
+        style: {}
     };
     state.blocks.push(newBlock);
     renderBlocks();
@@ -151,7 +155,7 @@ function getDefaultContent(type) {
         case 'video': return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
         case 'schedule': return { title: '일정 제목', start: '', end: '' };
         case 'list': return [{ label: '항목1', value: '내용1' }, { label: '항목2', value: '내용2' }];
-        case 'map': return { title: '장소명', address: '주소 입력', url: '' }; // Added url for map link
+        case 'map': return { title: '장소명', address: '주소 입력', url: '' };
         case 'link': return { text: '버튼 텍스트', url: '#' };
         default: return '';
     }
@@ -190,6 +194,8 @@ function selectBlock(id) {
 function renderBlocks() {
     const container = state.mode === 'viewer' ? document.getElementById('viewer-content') : elems.canvas;
 
+    if (!container) return; // Safeguard
+
     // Apply global style
     const bg = state.globalStyle?.backgroundColor || '#ffffff';
     container.parentElement.style.backgroundColor = bg;
@@ -205,7 +211,6 @@ function renderBlocks() {
             </div>
         ` : '';
 
-        // Wrapper with style for text blocks mainly
         return `
             <div class="block ${isActive}" id="${block.id}" onclick="selectBlock('${block.id}')" style="${block.type === 'text' || block.type === 'header' ? 'background:transparent;' : ''}">
                 ${controls}
@@ -254,14 +259,13 @@ function renderBlockContent(block) {
         case 'schedule':
             const startStr = block.content.start ? new Date(block.content.start).toLocaleString() : '시작일 미정';
             const endStr = block.content.end ? new Date(block.content.end).toLocaleString() : '종료일 미정';
-            // Apply common style to container, but might need specific overrides
             return `
                 <div class="block-schedule" style="${commonStyle}; padding: 20px; border-left: 4px solid ${s.borderColor || s.color || '#4a90e2'};">
                     <div class="schedule-title" style="font-weight:bold; font-size:1.2em; margin-bottom:5px;">${block.content.title}</div>
                     <div class="schedule-time" style="font-size:0.9em; opacity:0.8;">${startStr} ~ ${endStr}</div>
                 </div>`;
 
-        case 'list': // "Business Info" / List
+        case 'list': // "Business Info"
             const listItems = block.content.map(item => `
                 <div class="list-item" style="border-bottom:1px solid ${s.color ? s.color + '40' : '#eee'}; padding:8px 0;">
                     <span class="list-label" style="font-weight:bold;">${item.label}</span>
@@ -287,7 +291,6 @@ function renderBlockContent(block) {
             const btnId = `btn-${block.id}`;
             const bg = block.style?.backgroundColor || '#4a90e2';
             const hoverBg = block.style?.hoverBackgroundColor || '#357abd';
-            // Link block uses its own background for the button, but text alignment applies to the container
             return `
                 <div class="block-link" style="text-align:${s.textAlign || 'center'}; padding:10px;">
                     <a href="${block.content.url}" target="_blank" class="neu-btn" id="${btnId}"
@@ -316,7 +319,6 @@ function renderProperties() {
     } else {
         html = `<div class="prop-group"><h3>${getBlockName(block.type)} 설정</h3></div>`;
 
-        // Content Inputs based on Type
         if (block.type === 'header' || block.type === 'text') {
             html += createInput('content', '내용', block.content, block.type === 'text' ? 'textarea' : 'text');
             html += renderCommonTextStyleOptions(block);
@@ -337,10 +339,8 @@ function renderProperties() {
             html += createInput('content.end', '종료', block.content.end, 'datetime-local');
             html += renderCommonTextStyleOptions(block);
         }
-        else if (block.type === 'list') { // Business Info
-            // Edit items is complex, let's simplify for now or just style
+        else if (block.type === 'list') {
             html += `<p style="font-size:0.8em; color:#666;">항목 편집은 현재 지원되지 않습니다. (데모)</p>`;
-            // In a full app, we'd render a list editor here.
             html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'map') {
@@ -351,14 +351,10 @@ function renderProperties() {
         else if (block.type === 'link') {
             html += createInput('content.text', '버튼 텍스트', block.content.text);
             html += createInput('content.url', '이동 URL', block.content.url);
-
-            // Special Link Styles
             html += createInput('style.backgroundColor', '버튼 배경색', block.style?.backgroundColor || '#4a90e2', 'color');
             html += createInput('style.hoverBackgroundColor', '호버 배경색', block.style?.hoverBackgroundColor || '#357abd', 'color');
             html += createInput('style.color', '글자 색상', block.style?.color || '#ffffff', 'color');
             html += createInput('style.width', '너비 (예: 100%, 50%)', block.style?.width || '100%');
-
-            // Common Text Styles (Font specific)
             html += createInput('style.fontSize', '글자 크기', block.style?.fontSize || '16px');
             html += createInput('style.fontWeight', '굵기', block.style?.fontWeight || 'bold', 'select', ['normal', 'bold']);
         }
@@ -493,8 +489,10 @@ function compressImage(file, maxSizeMB, callback) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Simplified approach: Scale down if very large, then use quality.
             const MAX_DIM = 2000;
+            let width = img.width;
+            let height = img.height;
+
             if (width > MAX_DIM || height > MAX_DIM) {
                 if (width > height) {
                     height *= MAX_DIM / width;
@@ -505,8 +503,6 @@ function compressImage(file, maxSizeMB, callback) {
                 }
             }
 
-            var width = img.width;
-            var height = img.height;
             canvas.width = width;
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
@@ -618,25 +614,26 @@ function setupEventListeners() {
     });
 
     const canvasArea = document.querySelector('.device-screen');
-    // Important: Must preventdefault on dragover to allow drop
-    canvasArea.ondragover = (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
-        canvasArea.parentElement.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.5)';
-    };
+    if (canvasArea) {
+        canvasArea.ondragover = (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            canvasArea.parentElement.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.5)';
+        };
 
-    canvasArea.ondragleave = (e) => {
-        canvasArea.parentElement.style.boxShadow = '';
-    };
+        canvasArea.ondragleave = (e) => {
+            canvasArea.parentElement.style.boxShadow = '';
+        };
 
-    canvasArea.ondrop = (e) => {
-        e.preventDefault();
-        canvasArea.parentElement.style.boxShadow = '';
-        const type = e.dataTransfer.getData('text/plain');
-        if (type) {
-            addBlock(type);
-        }
-    };
+        canvasArea.ondrop = (e) => {
+            e.preventDefault();
+            canvasArea.parentElement.style.boxShadow = '';
+            const type = e.dataTransfer.getData('text/plain');
+            if (type) {
+                addBlock(type);
+            }
+        };
+    }
 
     // Global Settings
     elems.globalBgColor.oninput = (e) => {
@@ -900,8 +897,6 @@ async function loadPageData(id) {
 }
 
 function showPublishResult(id) {
-    // Generate URL based on script URL but acting as Web App
-    // We assume the script URL is the exec URL.
     const url = `${APPS_SCRIPT_URL}?id=${id}`;
 
     document.getElementById('share-url').value = url;
@@ -931,3 +926,6 @@ function downloadQR() {
         document.body.removeChild(link);
     }
 }
+
+// IMPORTANT: Entry point to start the application
+document.addEventListener('DOMContentLoaded', init);
