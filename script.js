@@ -255,11 +255,14 @@ function renderBlockContent(block) {
                         <a href="https://map.kakao.com/link/search/${query}" target="_blank" class="map-btn kakao">카카오맵</a>
                     </div>
                 </div>`;
-            <div class="block-link">
-                <a href="${block.content.url}" target="_blank" class="neu-btn" style="color:${block.style?.color || '#333'}; background-color:${block.style?.backgroundColor || '#ffffff'}">
-                    ${block.content.text}
-                </a>
-            </div>`;
+                </div > `;
+        case 'link':
+            return `
+                < div class="block-link" >
+                    <a href="${block.content.url}" target="_blank" class="neu-btn" style="color:${block.style?.color || '#333'}; background-color:${block.style?.backgroundColor || '#ffffff'}">
+                        ${block.content.text}
+                    </a>
+            </div > `;
         case 'divider':
             return `< div class="block-divider" ></div > `;
         default:
