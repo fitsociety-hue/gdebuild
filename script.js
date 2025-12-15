@@ -41,10 +41,13 @@ function init() {
         modal: document.getElementById('template-modal'),
         saveModal: document.getElementById('save-modal'),
         publishModal: document.getElementById('publish-modal'),
+        verifyModal: document.getElementById('verify-modal'),
         btnSave: document.getElementById('btn-save'),
         btnPublish: document.getElementById('btn-publish'),
         btnSaveConfirm: document.getElementById('confirm-save'),
         btnSaveCancel: document.getElementById('cancel-save'),
+        btnVerifyConfirm: document.getElementById('confirm-verify'),
+        btnVerifyCancel: document.getElementById('cancel-verify'),
         viewerApp: document.getElementById('viewer-app'),
         editorApp: document.getElementById('app'),
         dashboardApp: document.getElementById('dashboard-app'),
@@ -839,6 +842,21 @@ function setupEventListeners() {
         state.password = password;
         await savePage(password);
     };
+
+    // Verify Modal Listeners
+    elems.btnVerifyCancel.onclick = () => {
+        elems.verifyModal.classList.add('hidden');
+        state.pendingEditId = null;
+    };
+
+    elems.btnVerifyConfirm.onclick = async () => {
+        const password = document.getElementById('verify-password').value;
+        if (!password) {
+            alert('비밀번호를 입력해주세요.');
+            return;
+        }
+        await verifyAndLoad(state.pendingEditId, password);
+    };
 }
 
 function openSaveModal(isPublish) {
@@ -926,9 +944,13 @@ function renderProjectList(list) {
 }
 
 async function loadProjectForEdit(id) {
-    const password = prompt("편집하려면 비밀번호를 입력하세요:");
-    if (!password) return;
+    // Open Verify Modal instead of prompt
+    state.pendingEditId = id;
+    document.getElementById('verify-password').value = '';
+    elems.verifyModal.classList.remove('hidden');
+}
 
+async function verifyAndLoad(id, password) {
     try {
         const verifyRes = await fetch(APPS_SCRIPT_URL, {
             method: 'POST',
@@ -940,6 +962,9 @@ async function loadProjectForEdit(id) {
             alert('비밀번호가 일치하지 않습니다.');
             return;
         }
+
+        // Hide modal on success
+        elems.verifyModal.classList.add('hidden');
 
         const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
         const json = await res.json();
