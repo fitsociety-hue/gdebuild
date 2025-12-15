@@ -114,7 +114,7 @@ function savePage(params) {
   sheet.appendRow([
     id, 
     params.title || "Untitled",
-    params.password, 
+    "'" + params.password, 
     params.data, 
     now,
     params.author,
