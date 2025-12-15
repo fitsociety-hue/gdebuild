@@ -520,6 +520,9 @@ window.updateSlideDuration = function (id, val) {
 // AUTO SLIDE LOGIC
 function initAutoSlide() {
     setInterval(() => {
+        // Stop auto-slide if we are NOT in viewer mode (i.e. we are in editor/dashboard)
+        if (state.mode !== 'viewer') return;
+
         const slideBlocks = document.querySelectorAll('.block-slide');
         slideBlocks.forEach(el => {
             const duration = parseInt(el.dataset.duration) || 3000;
