@@ -459,16 +459,29 @@ aside {
     height: 100vh;
     background: white;
     overflow-y: auto;
-    display: block;
+    display: flex;
+    /* Center the mobile content */
+    justify-content: center;
+    align-items: flex-start;
+    /* Start from top but centered horizontally */
+    padding-top: 0;
 }
 
+/* Mobile View Frame in Viewer Mode */
 #viewer-content {
     width: 100%;
     max-width: 480px;
+    /* Restrict width to mobile size */
     margin: 0 auto;
-    background: white;
     min-height: 100vh;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+    /* Nice shadow */
+    position: relative;
+    /* Optional: Rounded corners if desired, but 100vh min-height makes it full vertical */
+    /* If user wants 'phone shape' exactly, we might want top/bottom margins, but 
+       viewer mode usually scrolls. Let's keep it full height but restricted width 
+       to look like a mobile app on a desktop screen. */
+    background: white;
 }
 
 /* --- DASHBOARD STYLES --- */
@@ -924,21 +937,38 @@ aside {
 
 /* Neuromorphism & Viewer UI Update */
 body.viewer-mode {
-    background-color: #C0D8C8;
-    /* Soft Green Background */
+    background-color: #f2f2f2;
+    /* Soft Gray Background for presentation */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.viewer-container {
-    background-color: transparent;
-    /* Let body bg show */
+.viewer-mode .viewer-container {
+    padding: 40px 0;
+    overflow-y: scroll;
+    /* Allow scrolling within the container */
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
+/* Viewer Content - Phone Simulation */
 #viewer-content {
-    background-color: transparent;
-    /* Transparent to show global style or body */
-    box-shadow: none;
-    padding-bottom: 80px;
+    background-color: white;
+    width: 100%;
+    max-width: 420px;
+    /* Mobile width */
+    min-height: 80vh;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-radius: 24px;
+    padding-bottom: 60px;
     /* Space for footer */
+    overflow: hidden;
+    position: relative;
+    border: 8px solid #333;
+    /* Phone bezel */
 }
 
 /* Neuromorphic Link Buttons */
@@ -953,7 +983,7 @@ body.viewer-mode {
     text-decoration: none;
     font-weight: 700;
     margin-bottom: 15px;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.5);
 }
