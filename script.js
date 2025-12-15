@@ -813,10 +813,17 @@ function setupEventListeners() {
     elems.btnSave.onclick = () => openSaveModal(false);
 
     elems.btnPublish.onclick = async () => {
+        // Feature: Auto-sets password for new projects if missing (Streamlined Publish)
+        if (!state.pageId && !state.password) {
+            state.password = "1234"; // Default password to avoid prompt
+        }
+
         if (state.password) {
             state.isPublishAction = true;
+            // Feature: Auto-save on publish
             await savePage(state.password);
         } else {
+            // Only for existing pages where password is unknown
             openSaveModal(true);
         }
     };
