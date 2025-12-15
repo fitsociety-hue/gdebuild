@@ -99,24 +99,9 @@ function switchToDashboardMode() {
 
 // --- TEMPLATES ---
 const templates = {
-    newsletter: [
-        { id: generateUUID(), type: 'image', content: 'https://via.placeholder.com/400x200?text=Header+Image' },
-        { id: generateUUID(), type: 'header', content: '이번 주 소식', style: { color: '#333' } },
-        { id: generateUUID(), type: 'text', content: '안녕하세요! 복지관의 새로운 소식을 전해드립니다.', style: { textAlign: 'left' } }
-    ],
-    promotion: [
-        { id: generateUUID(), type: 'image', content: 'https://via.placeholder.com/400x500?text=Event+Poster' },
-        { id: generateUUID(), type: 'header', content: '가을 축제 초대', style: { textAlign: 'center', fontSize: '24px' } },
-        { id: generateUUID(), type: 'text', content: '일시: 10월 25일(금) 14:00', style: { textAlign: 'center', backgroundColor: '#f9f9f9', padding: '10px' } },
-        { id: generateUUID(), type: 'schedule', content: { start: '2025-10-25T14:00', end: '2025-10-25T16:00', title: '본행사' } },
-        { id: generateUUID(), type: 'map', content: { title: '행사장', address: '서울시 행복구 복지로 123' } }
-    ],
-    invitation: [
-        { id: generateUUID(), type: 'header', content: 'INVITATION', style: { textAlign: 'center', color: '#ff6b6b' } },
-        { id: generateUUID(), type: 'text', content: '<h1>초 대 합 니 다</h1>', style: { textAlign: 'center' } },
-        { id: generateUUID(), type: 'image', content: 'https://via.placeholder.com/400x300?text=Map' },
-        { id: generateUUID(), type: 'link', content: { text: '참석 여부 알리기', url: 'https://forms.google.com' }, style: { backgroundColor: '#ff6b6b' } }
-    ]
+    newsletter: [],
+    promotion: [],
+    invitation: []
 };
 
 // --- CORE FUNCTIONS ---
