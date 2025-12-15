@@ -52,6 +52,8 @@ function init() {
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
+    setupEventListeners(); // Setup events for both modes to ensure buttons work if switched
+
     if (id) {
         // Viewer Mode
         // state.mode = 'viewer'; // Handled in loadPageData
@@ -59,7 +61,6 @@ function init() {
         loadPageData(id);
     } else {
         // Dashboard Mode
-        setupEventListeners();
         switchToDashboardMode();
     }
 }
@@ -774,6 +775,7 @@ function showPublishResult(id) {
     }
 
     // Start
-    init();
-// Load Dashboard immediately if in dashboard mode
-// (Handled in init)
+    document.addEventListener('DOMContentLoaded', () => {
+        init();
+    });
+
