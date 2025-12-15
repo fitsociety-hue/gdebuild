@@ -126,15 +126,18 @@ function addBlock(type) {
         id: generateUUID(),
         type: type,
         content: getDefaultContent(type),
-        style: {}
+        style: {} // Will be populated with defaults if needed
     };
     state.blocks.push(newBlock);
     renderBlocks();
     selectBlock(newBlock.id);
-    // Scroll to bottom
+
+    // Explicitly scroll to the new block
     setTimeout(() => {
         const el = document.getElementById(newBlock.id);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }, 100);
 }
 
@@ -148,7 +151,7 @@ function getDefaultContent(type) {
         case 'video': return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
         case 'schedule': return { title: '일정 제목', start: '', end: '' };
         case 'list': return [{ label: '항목1', value: '내용1' }, { label: '항목2', value: '내용2' }];
-        case 'map': return { title: '장소명', address: '주소 입력' };
+        case 'map': return { title: '장소명', address: '주소 입력', url: '' }; // Added url for map link
         case 'link': return { text: '버튼 텍스트', url: '#' };
         default: return '';
     }
@@ -178,7 +181,7 @@ function moveBlock(id, direction) {
 
 function selectBlock(id) {
     state.activeBlockId = id;
-    renderBlocks(); // Re-render to show active state
+    renderBlocks();
     renderProperties();
 }
 
@@ -202,6 +205,7 @@ function renderBlocks() {
             </div>
         ` : '';
 
+        // Wrapper with style for text blocks mainly
         return `
             <div class="block ${isActive}" id="${block.id}" onclick="selectBlock('${block.id}')" style="${block.type === 'text' || block.type === 'header' ? 'background:transparent;' : ''}">
                 ${controls}
@@ -213,68 +217,87 @@ function renderBlocks() {
 
 function renderBlockContent(block) {
     const s = block.style || {};
-    const commonStyle = `color:${s.color || 'inherit'}; text-align:${s.textAlign || 'left'}; font-weight:${s.fontWeight || 'normal'}; font-size:${s.fontSize || 'inherit'}; padding:${s.padding || '0'}; background-color:${s.backgroundColor || 'transparent'};`;
+    // Unified Style String
+    const commonStyle = `
+        color:${s.color || 'inherit'}; 
+        text-align:${s.textAlign || 'left'}; 
+        font-weight:${s.fontWeight || 'normal'}; 
+        font-size:${s.fontSize || 'inherit'}; 
+        background-color:${s.backgroundColor || 'transparent'};
+    `;
 
     switch (block.type) {
         case 'header':
-            return `<h2 style="${commonStyle}">${block.content}</h2>`;
+            return `<h2 style="${commonStyle}; margin:0; padding:10px;">${block.content}</h2>`;
+
         case 'text':
-            return `<div style="${commonStyle}">${block.content}</div>`;
+            return `<div style="${commonStyle}; padding:10px;">${block.content.replace(/\n/g, '<br>')}</div>`;
+
         case 'image':
             const imgContent = `<div class="block-image"><img src="${block.content}" alt="Image" style="width:100%; display:block;"></div>`;
             if (block.link) {
                 return `<a href="${block.link}" target="_blank" style="display:block; text-decoration:none;">${imgContent}</a>`;
             }
             return imgContent;
+
         case 'slide':
             const slides = block.content.map(src => `<div class="slide-item"><img src="${src}"></div>`).join('');
             return `<div class="block-slide"><div class="slide-container">${slides}</div></div>`;
+
         case 'gallery':
             const imgs = block.content.map(src => `<div class="gallery-item"><img src="${src}"></div>`).join('');
             return `<div class="block-gallery">${imgs}</div>`;
+
         case 'video':
             return `<div class="block-video"><iframe src="${block.content}" allowfullscreen></iframe></div>`;
+
         case 'schedule':
             const startStr = block.content.start ? new Date(block.content.start).toLocaleString() : '시작일 미정';
             const endStr = block.content.end ? new Date(block.content.end).toLocaleString() : '종료일 미정';
+            // Apply common style to container, but might need specific overrides
             return `
-                <div class="block-schedule">
-                    <div class="schedule-title">${block.content.title}</div>
-                    <div class="schedule-time">${startStr} ~ ${endStr}</div>
+                <div class="block-schedule" style="${commonStyle}; padding: 20px; border-left: 4px solid ${s.borderColor || s.color || '#4a90e2'};">
+                    <div class="schedule-title" style="font-weight:bold; font-size:1.2em; margin-bottom:5px;">${block.content.title}</div>
+                    <div class="schedule-time" style="font-size:0.9em; opacity:0.8;">${startStr} ~ ${endStr}</div>
                 </div>`;
-        case 'list':
+
+        case 'list': // "Business Info" / List
             const listItems = block.content.map(item => `
-                <div class="list-item">
-                    <span class="list-label">${item.label}</span>
+                <div class="list-item" style="border-bottom:1px solid ${s.color ? s.color + '40' : '#eee'}; padding:8px 0;">
+                    <span class="list-label" style="font-weight:bold;">${item.label}</span>
                     <span class="list-value">${item.value}</span>
                 </div>
             `).join('');
-            return `<div class="block-list">${listItems}</div>`;
+            return `<div class="block-list" style="${commonStyle}; padding:20px;">${listItems}</div>`;
+
         case 'map':
             const { title, address } = block.content;
             const query = encodeURIComponent(address);
             return `
-                <div class="block-map">
-                    <div class="map-title">${title}</div>
-                    <div class="map-address">${address}</div>
-                    <div class="map-buttons">
-                        <a href="https://map.naver.com/v5/search/${query}" target="_blank" class="map-btn naver">네이버 지도</a>
-                        <a href="https://map.kakao.com/link/search/${query}" target="_blank" class="map-btn kakao">카카오맵</a>
+                <div class="block-map" style="${commonStyle}; padding:15px; border-radius:8px; background-color:${s.backgroundColor || '#f8f9fa'};">
+                    <div class="map-title" style="font-weight:bold; margin-bottom:5px;">${title}</div>
+                    <div class="map-address" style="margin-bottom:10px; font-size:0.9em;">${address}</div>
+                    <div class="map-buttons" style="display:flex; justify-content:${s.textAlign || 'center'}; gap:5px;">
+                        <a href="https://map.naver.com/v5/search/${query}" target="_blank" class="map-btn naver" style="padding:6px 10px; border-radius:4px; text-decoration:none; color:white; background:#2DB400; font-size:0.8em;">네이버 지도</a>
+                        <a href="https://map.kakao.com/link/search/${query}" target="_blank" class="map-btn kakao" style="padding:6px 10px; border-radius:4px; text-decoration:none; color:#3c1e1e; background:#FEE500; font-size:0.8em;">카카오맵</a>
                     </div>
                 </div>`;
+
         case 'link':
             const btnId = `btn-${block.id}`;
             const bg = block.style?.backgroundColor || '#4a90e2';
             const hoverBg = block.style?.hoverBackgroundColor || '#357abd';
+            // Link block uses its own background for the button, but text alignment applies to the container
             return `
-                <div class="block-link">
+                <div class="block-link" style="text-align:${s.textAlign || 'center'}; padding:10px;">
                     <a href="${block.content.url}" target="_blank" class="neu-btn" id="${btnId}"
-                       style="color:${block.style?.color || '#333'}; background-color:${bg}; transition: background-color 0.2s;"
+                       style="display:inline-block; width:${s.width || '100%'}; color:${block.style?.color || '#ffffff'}; background-color:${bg}; transition: background-color 0.2s; font-size:${s.fontSize || '16px'}; font-weight:${s.fontWeight || 'bold'}; padding:15px; text-decoration:none; border-radius:8px;"
                        onmouseover="this.style.backgroundColor='${hoverBg}'"
                        onmouseout="this.style.backgroundColor='${bg}'">
                         ${block.content.text}
                     </a>
                 </div>`;
+
         case 'divider':
             return `<div class="block-divider"></div>`;
         default:
@@ -293,48 +316,71 @@ function renderProperties() {
     } else {
         html = `<div class="prop-group"><h3>${getBlockName(block.type)} 설정</h3></div>`;
 
-        // Common Text Styles
-        if (['text', 'header'].includes(block.type)) {
+        // Content Inputs based on Type
+        if (block.type === 'header' || block.type === 'text') {
             html += createInput('content', '내용', block.content, block.type === 'text' ? 'textarea' : 'text');
-            html += createInput('style.fontSize', '글자 크기', block.style?.fontSize || '16px');
-            html += createInput('style.color', '글자 색상', block.style?.color || '#000000', 'color');
-            html += createInput('style.backgroundColor', '배경 색상', block.style?.backgroundColor || 'transparent', 'color');
-            html += createInput('style.textAlign', '정렬', block.style?.textAlign || 'left', 'select', ['left', 'center', 'right']);
-            html += createInput('style.fontWeight', '굵기', block.style?.fontWeight || 'normal', 'select', ['normal', 'bold']);
+            html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'image') {
             html += createFileOrUrlInput('content', block.content);
-            html += createInput('link', '클릭 시 이동 URL (하이퍼링크)', block.link || '');
+            html += createInput('link', '이동 URL', block.link || '');
         }
         else if (block.type === 'slide' || block.type === 'gallery') {
-            html += `<div class="prop-group"><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div>`;
             html += createMultiImageInput('content', block.content);
         }
         else if (block.type === 'video') {
-            html += createInput('content', '유튜브 Embed URL', block.content);
+            html += createInput('content', 'YouTube URL', block.content);
         }
         else if (block.type === 'schedule') {
             html += createInput('content.title', '일정 제목', block.content.title);
-            html += createInput('content.start', '시작 시간', block.content.start, 'datetime-local');
-            html += createInput('content.end', '종료 시간', block.content.end, 'datetime-local');
+            html += createInput('content.start', '시작', block.content.start, 'datetime-local');
+            html += createInput('content.end', '종료', block.content.end, 'datetime-local');
+            html += renderCommonTextStyleOptions(block);
+        }
+        else if (block.type === 'list') { // Business Info
+            // Edit items is complex, let's simplify for now or just style
+            html += `<p style="font-size:0.8em; color:#666;">항목 편집은 현재 지원되지 않습니다. (데모)</p>`;
+            // In a full app, we'd render a list editor here.
+            html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'map') {
             html += createInput('content.title', '장소명', block.content.title);
             html += createInput('content.address', '주소', block.content.address);
+            html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'link') {
             html += createInput('content.text', '버튼 텍스트', block.content.text);
             html += createInput('content.url', '이동 URL', block.content.url);
-            html += createInput('style.backgroundColor', '버튼 색상', block.style?.backgroundColor || '#4a90e2', 'color');
+
+            // Special Link Styles
+            html += createInput('style.backgroundColor', '버튼 배경색', block.style?.backgroundColor || '#4a90e2', 'color');
+            html += createInput('style.hoverBackgroundColor', '호버 배경색', block.style?.hoverBackgroundColor || '#357abd', 'color');
             html += createInput('style.color', '글자 색상', block.style?.color || '#ffffff', 'color');
-            html += createInput('style.hoverBackgroundColor', '호버 배경 색상', block.style?.hoverBackgroundColor || '#357abd', 'color');
+            html += createInput('style.width', '너비 (예: 100%, 50%)', block.style?.width || '100%');
+
+            // Common Text Styles (Font specific)
+            html += createInput('style.fontSize', '글자 크기', block.style?.fontSize || '16px');
+            html += createInput('style.fontWeight', '굵기', block.style?.fontWeight || 'bold', 'select', ['normal', 'bold']);
         }
     }
     elems.propPanel.innerHTML = html;
 }
 
+function renderCommonTextStyleOptions(block) {
+    let s = block.style || {};
+    let html = '';
+    html += createInput('style.fontSize', '글자 크기', s.fontSize || '16px');
+    html += createInput('style.color', '글자 색상', s.color || '#000000', 'color');
+    html += createInput('style.textAlign', '정렬', s.textAlign || 'left', 'select', ['left', 'center', 'right']);
+    html += createInput('style.fontWeight', '굵기', s.fontWeight || 'normal', 'select', ['normal', 'bold']);
+    if (block.type !== 'image' && block.type !== 'video') {
+        html += createInput('style.backgroundColor', '배경 색상', s.backgroundColor || 'transparent', 'color');
+    }
+    return html;
+}
+
 function getBlockName(type) {
-    const map = { header: '헤드', text: '텍스트', image: '이미지', slide: '슬라이드', gallery: '갤러리', video: '영상', schedule: '일정', map: '지도', link: '링크', divider: '구분선' };
+    const map = { header: '헤드(제목)', text: '텍스트', image: '이미지', slide: '슬라이드', gallery: '갤러리', video: '영상', schedule: '일정', map: '지도', link: '링크 버튼', list: '사업안내' };
     return map[type] || type.toUpperCase();
 }
 
@@ -447,14 +493,7 @@ function compressImage(file, maxSizeMB, callback) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Initial dimensions
-            let width = img.width;
-            let height = img.height;
-
-            // Max dimension constraint (e.g. 1920) can also be used, 
-            // but let's focus on quality reduction loop or simple scale down first.
             // Simplified approach: Scale down if very large, then use quality.
-
             const MAX_DIM = 2000;
             if (width > MAX_DIM || height > MAX_DIM) {
                 if (width > height) {
@@ -466,15 +505,15 @@ function compressImage(file, maxSizeMB, callback) {
                 }
             }
 
+            var width = img.width;
+            var height = img.height;
             canvas.width = width;
             canvas.height = height;
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Loop for quality reduction
             let quality = 0.9;
             let dataUrl = canvas.toDataURL('image/jpeg', quality);
 
-            // Reduce quality until it fits, but don't go too low
             while (dataUrl.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
                 quality -= 0.1;
                 dataUrl = canvas.toDataURL('image/jpeg', quality);
@@ -489,9 +528,6 @@ window.handleImageUpload = function (input, blockId, key, isArray = false) {
     const file = input.files[0];
     if (!file) return;
 
-    // Use compressImage to ensure < 1MB (or reasonably small)
-    // Google Sheets cell limit is 50,000 chars, but script properties/post data handles more.
-    // However, keeping it around 500KB is safe.
     compressImage(file, 0.5, (result) => {
         if (isArray) {
             const block = state.blocks.find(b => b.id === blockId);
@@ -531,13 +567,9 @@ function setupEventListeners() {
     // Filtering Tabs
     elems.tabBtns.forEach(btn => {
         btn.onclick = (e) => {
-            // UI
             elems.tabBtns.forEach(b => b.classList.remove('active'));
             e.target.classList.add('active');
-
-            // Logic
-            const filter = e.target.innerText; // '전체', '개인', '팀'
-            filterProjects(filter);
+            filterProjects(e.target.innerText);
         };
     });
 
@@ -553,15 +585,13 @@ function setupEventListeners() {
         const type = document.querySelector('.type-card.selected').dataset.type;
         const category = document.querySelector('.toggle-btn.active').dataset.value;
 
-        // Set State
         state.pageTitle = title;
-        state.pageId = null; // New project
-        state.password = pwd; // Store for first save (optional, or just pass to save)
+        state.pageId = null;
+        state.password = pwd;
         state.author = author;
         state.category = category;
-        state.globalStyle = { backgroundColor: '#C0D8C8' }; // Default Neuromorphic BG
+        state.globalStyle = { backgroundColor: '#C0D8C8' };
 
-        // Load Template
         state.blocks = JSON.parse(JSON.stringify(templates[type]));
 
         elems.newProjectModal.classList.add('hidden');
@@ -577,35 +607,31 @@ function setupEventListeners() {
 
     // Toolbar (Drag & Drop + Click)
     elems.tools.forEach(btn => {
-        // Click to add
         btn.onclick = () => {
-            const type = btn.dataset.type;
-            addBlock(type);
+            addBlock(btn.dataset.type);
         };
 
-        // Drag Start
         btn.ondragstart = (e) => {
             e.dataTransfer.setData('text/plain', btn.dataset.type);
             e.dataTransfer.effectAllowed = 'copy';
         };
     });
 
-    // Canvas Drop Area
     const canvasArea = document.querySelector('.device-screen');
-
+    // Important: Must preventdefault on dragover to allow drop
     canvasArea.ondragover = (e) => {
-        e.preventDefault(); // Action must normally be prevented to allow drop
+        e.preventDefault();
         e.dataTransfer.dropEffect = 'copy';
-        canvasArea.style.backgroundColor = '#f0f8ff'; // Highlight
+        canvasArea.parentElement.style.boxShadow = '0 0 15px rgba(74, 144, 226, 0.5)';
     };
 
     canvasArea.ondragleave = (e) => {
-        canvasArea.style.backgroundColor = ''; // Reset highlight
+        canvasArea.parentElement.style.boxShadow = '';
     };
 
     canvasArea.ondrop = (e) => {
         e.preventDefault();
-        canvasArea.style.backgroundColor = '';
+        canvasArea.parentElement.style.boxShadow = '';
         const type = e.dataTransfer.getData('text/plain');
         if (type) {
             addBlock(type);
@@ -623,11 +649,9 @@ function setupEventListeners() {
 
     // Dashboard navigation
     elems.btnNewProject.onclick = () => {
-        // Reset inputs
         document.getElementById('np-title').value = '';
         document.getElementById('np-password').value = '';
         document.getElementById('np-author').value = '';
-
         switchToEditorMode();
         elems.newProjectModal.classList.remove('hidden');
         elems.newProjectModal.style.display = 'flex';
@@ -642,12 +666,10 @@ function setupEventListeners() {
     elems.btnSave.onclick = () => openSaveModal(false);
 
     elems.btnPublish.onclick = async () => {
-        // If we have a password (existing or new project), try to save/publish directly
         if (state.password) {
             state.isPublishAction = true;
             await savePage(state.password);
         } else {
-            // Should not happen for new projects or loaded projects, but fallback
             openSaveModal(true);
         }
     };
@@ -660,7 +682,6 @@ function setupEventListeners() {
             alert('비밀번호 4자리를 입력해주세요.');
             return;
         }
-        // Update state password if manually entered
         state.password = password;
         await savePage(password);
     };
@@ -694,7 +715,6 @@ async function loadDashboard() {
 
         if (json.status === 'success') {
             state.projectList = json.data;
-            // Default filter: All
             filterProjects('전체');
         } else {
             alert('로드 실패: ' + json.message);
@@ -706,9 +726,6 @@ async function loadDashboard() {
 }
 
 function filterProjects(categoryLabel) {
-    // categoryLabel: '전체', '개인', '팀'
-    // Data category: 'personal', 'team'
-
     let filtered = [];
     if (!state.projectList) return;
 
@@ -755,9 +772,8 @@ function renderProjectList(list) {
 }
 
 async function loadProjectForEdit(id) {
-    // Password Verification
     const password = prompt("편집하려면 비밀번호를 입력하세요:");
-    if (!password) return; // Cancelled
+    if (!password) return;
 
     try {
         const verifyRes = await fetch(APPS_SCRIPT_URL, {
@@ -771,7 +787,6 @@ async function loadProjectForEdit(id) {
             return;
         }
 
-        // Proceed if password correct
         const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
         const json = await res.json();
         if (json.status === 'success') {
@@ -782,9 +797,8 @@ async function loadProjectForEdit(id) {
             state.author = json.data.author;
             state.category = json.data.category;
             state.pageId = json.data.id;
-            state.password = password; // Remember successful password for future save?
+            state.password = password;
 
-            // Sync UI
             elems.pageTitleInput.innerText = state.pageTitle;
             elems.globalBgColor.value = state.globalStyle.backgroundColor || '#ffffff';
 
@@ -882,5 +896,38 @@ async function loadPageData(id) {
         }
     } catch (e) {
         document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
+    }
+}
+
+function showPublishResult(id) {
+    // Generate URL based on script URL but acting as Web App
+    // We assume the script URL is the exec URL.
+    const url = `${APPS_SCRIPT_URL}?id=${id}`;
+
+    document.getElementById('share-url').value = url;
+
+    // Simple QR Code generation URL
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+    document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
+
+    elems.publishModal.classList.remove('hidden');
+}
+
+function copyUrl() {
+    const copyText = document.getElementById("share-url");
+    copyText.select();
+    document.execCommand("copy");
+    alert("URL이 복사되었습니다.");
+}
+
+function downloadQR() {
+    const img = document.querySelector('#qr-code-img img');
+    if (img) {
+        const link = document.createElement('a');
+        link.href = img.src;
+        link.download = 'qrcode.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
