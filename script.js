@@ -263,9 +263,15 @@ function renderBlockContent(block) {
                     </div>
                 </div>`;
         case 'link':
+            const btnId = `btn-${block.id}`;
+            const bg = block.style?.backgroundColor || '#4a90e2';
+            const hoverBg = block.style?.hoverBackgroundColor || '#357abd';
             return `
                 <div class="block-link">
-                    <a href="${block.content.url}" target="_blank" class="neu-btn" style="color:${block.style?.color || '#333'}; background-color:${block.style?.backgroundColor || '#ffffff'}">
+                    <a href="${block.content.url}" target="_blank" class="neu-btn" id="${btnId}"
+                       style="color:${block.style?.color || '#333'}; background-color:${bg}; transition: background-color 0.2s;"
+                       onmouseover="this.style.backgroundColor='${hoverBg}'"
+                       onmouseout="this.style.backgroundColor='${bg}'">
                         ${block.content.text}
                     </a>
                 </div>`;
@@ -321,6 +327,7 @@ function renderProperties() {
             html += createInput('content.url', '이동 URL', block.content.url);
             html += createInput('style.backgroundColor', '버튼 색상', block.style?.backgroundColor || '#4a90e2', 'color');
             html += createInput('style.color', '글자 색상', block.style?.color || '#ffffff', 'color');
+            html += createInput('style.hoverBackgroundColor', '호버 배경 색상', block.style?.hoverBackgroundColor || '#357abd', 'color');
         }
     }
     elems.propPanel.innerHTML = html;
@@ -633,7 +640,17 @@ function setupEventListeners() {
 
     // Save & Publish
     elems.btnSave.onclick = () => openSaveModal(false);
-    elems.btnPublish.onclick = () => openSaveModal(true); // Publish acts like save but opens QR modal after
+
+    elems.btnPublish.onclick = async () => {
+        // If we have a password (existing or new project), try to save/publish directly
+        if (state.password) {
+            state.isPublishAction = true;
+            await savePage(state.password);
+        } else {
+            // Should not happen for new projects or loaded projects, but fallback
+            openSaveModal(true);
+        }
+    };
 
     elems.btnSaveCancel.onclick = () => elems.saveModal.classList.add('hidden');
 
@@ -643,6 +660,8 @@ function setupEventListeners() {
             alert('비밀번호 4자리를 입력해주세요.');
             return;
         }
+        // Update state password if manually entered
+        state.password = password;
         await savePage(password);
     };
 }
