@@ -70,6 +70,9 @@ function init() {
         // Dashboard Mode
         switchToDashboardMode();
     }
+
+    // Start Auto Slide
+    initAutoSlide();
 }
 
 // --- MODE SWITCHING ---
@@ -135,7 +138,7 @@ function getDefaultContent(type) {
         case 'header': return '제목을 입력하세요';
         case 'text': return '내용을 입력하세요.';
         case 'image': return 'https://via.placeholder.com/400x200';
-        case 'slide': return ['https://via.placeholder.com/400x200/eee?text=Slide+1', 'https://via.placeholder.com/400x200/ddd?text=Slide+2'];
+        case 'slide': return { images: ['https://via.placeholder.com/400x200/eee?text=Slide+1', 'https://via.placeholder.com/400x200/ddd?text=Slide+2'], duration: 3 };
         case 'gallery': return ['https://via.placeholder.com/150', 'https://via.placeholder.com/150', 'https://via.placeholder.com/150', 'https://via.placeholder.com/150'];
         case 'video': return 'https://www.youtube.com/embed/dQw4w9WgXcQ';
         case 'schedule': return { title: '일정 제목', start: '', end: '' };
@@ -231,8 +234,27 @@ function renderBlockContent(block) {
             return imgContent;
 
         case 'slide':
-            const slides = block.content.map(src => `<div class="slide-item"><img src="${src}"></div>`).join('');
-            return `<div class="block-slide"><div class="slide-container">${slides}</div></div>`;
+            // Compatibility for old array format
+            const images = Array.isArray(block.content) ? block.content : (block.content.images || []);
+            const duration = (block.content.duration || 3) * 1000;
+
+            const slides = images.map((src, idx) => `
+                <div class="slide-item ${idx === 0 ? 'active' : ''}" style="display:${idx === 0 ? 'block' : 'none'}; transition: opacity 0.5s;">
+                    <img src="${src}" style="width:100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px;">
+                </div>
+            `).join('');
+
+            return `
+            <div class="block-slide" data-duration="${duration}" data-current="0" data-total="${images.length}" style="position:relative; width:100%; overflow:hidden;">
+                <div class="slide-inner">
+                    ${slides.length > 0 ? slides : '<div style="height:200px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; color:#999;">이미지 없음</div>'}
+                </div>
+                
+                ${slides.length > 1 ? `
+                    <button class="slide-nav prev" onclick="event.stopPropagation(); manualSlide('${block.id}', -1)" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.3); color:white; border:none; border-radius:50%; width:30px; height:30px;">&lt;</button>
+                    <button class="slide-nav next" onclick="event.stopPropagation(); manualSlide('${block.id}', 1)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.3); color:white; border:none; border-radius:50%; width:30px; height:30px;">&gt;</button>
+                ` : ''}
+            </div>`;
 
         case 'gallery':
             const imgs = block.content.map(src => `<div class="gallery-item"><img src="${src}"></div>`).join('');
@@ -312,7 +334,17 @@ function renderProperties() {
             html += createFileOrUrlInput('content', block.content);
             html += createInput('link', '이동 URL', block.link || '');
         }
-        else if (block.type === 'slide' || block.type === 'gallery') {
+        else if (block.type === 'slide') {
+            const list = Array.isArray(block.content) ? block.content : (block.content.images || []);
+            const dur = block.content.duration || 3;
+
+            html += `<div class="prop-group"><label>슬라이드 전환 간격 (초)</label>
+                     <input type="number" step="0.1" min="0.5" max="7.0" class="prop-input" value="${dur}" 
+                     onchange="updateSlideDuration('${state.activeBlockId}', this.value)"></div>`;
+
+            html += createMultiImageInput('content.images', list);
+        }
+        else if (block.type === 'gallery') {
             html += createMultiImageInput('content', block.content);
         }
         else if (block.type === 'video') {
@@ -410,7 +442,17 @@ function createFileOrUrlInput(key, value) {
                 <i class="fas fa-cloud-upload-alt"></i> 파일 선택
                 <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, '${state.activeBlockId}', '${key}')">
             </label>
-            <input type="text" class="prop-input" placeholder="또는 이미지 URL 입력" value="${value.startsWith('data:') ? '' : value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
+            
+            ${value ? `
+            <div class="image-preview-box" style="margin-top:10px; position:relative; display:inline-block;">
+                <img src="${value}" style="max-width:100%; max-height:150px; border-radius:4px; border:1px solid #ddd;">
+                <button onclick="updateBlockProperty('${state.activeBlockId}', '${key}', '')" style="position:absolute; top:5px; right:5px; background:rgba(255,0,0,0.8); color:white; border:none; border-radius:50%; width:24px; height:24px; cursor:pointer; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-trash" style="font-size:12px;"></i>
+                </button>
+            </div>
+            ` : ''}
+            
+            <input type="text" class="prop-input" style="margin-top:5px;" placeholder="또는 이미지 URL 입력" value="${value.startsWith('data:') ? '' : value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
         </div>
     `;
 }
@@ -420,9 +462,11 @@ function createMultiImageInput(key, values) {
     values.forEach((v, idx) => {
         html += `
             <div style="display:flex; gap:5px; margin-bottom:5px;">
-                <img src="${v}" style="width:30px; height:30px; object-fit:cover;">
-                <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px;">
-                <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" style="padding:5px;">&times;</button>
+                <img src="${v}" style="width:50px; height:50px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">
+                <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px; flex:1;">
+                <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" class="danger-btn" style="width:auto; padding:5px 10px;">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         `;
     });
@@ -433,8 +477,98 @@ function createMultiImageInput(key, values) {
             <i class="fas fa-plus"></i> 이미지 추가(파일)
             <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, '${state.activeBlockId}', '${key}', true)">
         </label>
+        <div style="margin-top:5px;">
+            <button class="secondary-btn" style="padding:5px 10px; font-size:12px;" onclick="addUrlImagePrompt('${state.activeBlockId}', '${key}')">+ URL로 이미지 추가</button>
+        </div>
     `;
     return html;
+}
+
+window.addUrlImagePrompt = function (id, key) {
+    const url = prompt("이미지 URL을 입력하세요:");
+    if (url) {
+        const block = state.blocks.find(b => b.id === id);
+        if (!block) return;
+
+        // Handle nested property access for slides (content.images)
+        if (key.includes('.')) {
+            const keys = key.split('.');
+            if (!block[keys[0]]) block[keys[0]] = {};
+            if (!Array.isArray(block[keys[0]][keys[1]])) block[keys[0]][keys[1]] = [];
+            block[keys[0]][keys[1]].push(url);
+        } else {
+            if (Array.isArray(block[key])) {
+                block[key].push(url);
+            }
+        }
+        renderBlocks();
+        renderProperties();
+    }
+}
+
+window.updateSlideDuration = function (id, val) {
+    const block = state.blocks.find(b => b.id === id);
+    if (!block) return;
+    if (typeof block.content !== 'object') {
+        // Convert old string/array content to object if needed
+        block.content = { images: Array.isArray(block.content) ? block.content : [], duration: 3 };
+    }
+    block.content.duration = parseFloat(val);
+    renderBlocks(); // Re-render to update data-duration
+}
+
+// AUTO SLIDE LOGIC
+function initAutoSlide() {
+    setInterval(() => {
+        const slideBlocks = document.querySelectorAll('.block-slide');
+        slideBlocks.forEach(el => {
+            const duration = parseInt(el.dataset.duration) || 3000;
+            let lastTime = parseInt(el.dataset.lastTime) || 0;
+            const now = Date.now();
+
+            if (now - lastTime > duration) {
+                const total = parseInt(el.dataset.total) || 0;
+                if (total <= 1) return;
+
+                let current = parseInt(el.dataset.current) || 0;
+                const next = (current + 1) % total;
+
+                changeSlide(el, next);
+                el.dataset.lastTime = now;
+            }
+        });
+    }, 100);
+}
+
+function changeSlide(el, index) {
+    const items = el.querySelectorAll('.slide-item');
+    items.forEach((item, idx) => {
+        if (idx === index) {
+            item.style.display = 'block';
+            // Trigger reflow for transition if needed
+            setTimeout(() => item.style.opacity = '1', 10);
+        } else {
+            item.style.opacity = '0';
+            setTimeout(() => item.style.display = 'none', 500);
+        }
+    });
+    el.dataset.current = index;
+}
+
+window.manualSlide = function (blockId, dir) {
+    const el = document.getElementById(blockId).querySelector('.block-slide');
+    if (!el) return;
+
+    let current = parseInt(el.dataset.current) || 0;
+    const total = parseInt(el.dataset.total) || 0;
+    if (total <= 1) return;
+
+    let next = current + dir;
+    if (next >= total) next = 0;
+    if (next < 0) next = total - 1;
+
+    changeSlide(el, next);
+    el.dataset.lastTime = Date.now(); // Reset timer
 }
 
 // --- LOGIC HANDLING ---
@@ -456,11 +590,18 @@ window.updateBlockProperty = function (id, key, value) {
 window.removeArrayItem = function (id, key, index) {
     const block = state.blocks.find(b => b.id === id);
     if (!block) return;
-    if (Array.isArray(block.content)) {
-        block.content.splice(index, 1);
-        renderBlocks();
-        renderProperties();
+
+    // Handle nested arrays (e.g. content.images)
+    if (key.includes('.')) {
+        const keys = key.split('.');
+        if (block[keys[0]] && Array.isArray(block[keys[0]][keys[1]])) {
+            block[keys[0]][keys[1]].splice(index, 1);
+        }
+    } else if (Array.isArray(block[key])) {
+        block[key].splice(index, 1);
     }
+    renderBlocks();
+    renderProperties();
 }
 
 // IMAGE RESIZE UTILS
@@ -512,17 +653,22 @@ window.handleImageUpload = function (input, blockId, key, isArray = false) {
     compressImage(file, 0.5, (result) => {
         if (isArray) {
             const block = state.blocks.find(b => b.id === blockId);
-            if (block && Array.isArray(block.content)) {
-                block.content.push(result);
+            if (arr) {
+                arr.push(result);
                 renderBlocks();
                 renderProperties();
             }
         } else {
             updateBlockProperty(blockId, key, result);
             renderProperties();
+            renderBlocks(); // Refresh block
         }
     });
 };
+
+function getNestedProperty(obj, keyPath) {
+    return keyPath.split('.').reduce((acc, part) => acc && acc[part], obj);
+}
 
 
 // --- EVENT LISTENERS ---
