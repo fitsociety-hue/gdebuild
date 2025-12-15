@@ -21,7 +21,10 @@ const state = {
     blocks: [],   // Array of block objects
     activeBlockId: null, // Currently selected block ID
     isDirty: false,
-    projectList: []
+    projectList: [],
+    author: '',
+    category: 'team', // 'team' | 'personal'
+    password: ''
 };
 
 // --- DOM ELEMENTS ---
@@ -44,7 +47,8 @@ const elems = {
     btnBackDashboard: document.getElementById('btn-back-dashboard'),
     globalBgColor: document.getElementById('global-bg-color'),
     pageTitleInput: document.getElementById('current-page-title'),
-    newProjectModal: document.getElementById('new-project-modal')
+    newProjectModal: document.getElementById('new-project-modal'),
+    tabBtns: document.querySelectorAll('.tab-btn')
 };
 
 // --- INITIALIZATION ---
@@ -56,7 +60,6 @@ function init() {
 
     if (id) {
         // Viewer Mode
-        // state.mode = 'viewer'; // Handled in loadPageData
         switchToViewerMode();
         loadPageData(id);
     } else {
@@ -255,18 +258,17 @@ function renderBlockContent(block) {
                         <a href="https://map.kakao.com/link/search/${query}" target="_blank" class="map-btn kakao">카카오맵</a>
                     </div>
                 </div>`;
-                </div > `;
         case 'link':
             return `
-                < div class="block-link" >
+                <div class="block-link">
                     <a href="${block.content.url}" target="_blank" class="neu-btn" style="color:${block.style?.color || '#333'}; background-color:${block.style?.backgroundColor || '#ffffff'}">
                         ${block.content.text}
                     </a>
-            </div > `;
+                </div>`;
         case 'divider':
-            return `< div class="block-divider" ></div > `;
+            return `<div class="block-divider"></div>`;
         default:
-            return `< div > Unknown Block</div > `;
+            return `<div>Unknown Block</div>`;
     }
 }
 
@@ -279,7 +281,7 @@ function renderProperties() {
     if (!block) {
         html = '<div class="empty-state"><p>블록을 선택하여 속성을 편집하세요.</p></div>';
     } else {
-        html = `< div class="prop-group" > <h3>${getBlockName(block.type)} 설정</h3></div > `;
+        html = `<div class="prop-group"><h3>${getBlockName(block.type)} 설정</h3></div>`;
 
         // Common Text Styles
         if (['text', 'header'].includes(block.type)) {
@@ -294,7 +296,7 @@ function renderProperties() {
             html += createFileOrUrlInput('content', block.content);
         }
         else if (block.type === 'slide' || block.type === 'gallery') {
-            html += `< div class="prop-group" ><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div > `;
+            html += `<div class="prop-group"><label>이미지 관리</label><p style="font-size:12px; color:#666;">이미지를 추가하려면 아래 버튼을 사용하세요.</p></div>`;
             html += createMultiImageInput('content', block.content);
         }
         else if (block.type === 'video') {
@@ -313,6 +315,7 @@ function renderProperties() {
             html += createInput('content.text', '버튼 텍스트', block.content.text);
             html += createInput('content.url', '이동 URL', block.content.url);
             html += createInput('style.backgroundColor', '버튼 색상', block.style?.backgroundColor || '#4a90e2', 'color');
+            html += createInput('style.color', '글자 색상', block.style?.color || '#ffffff', 'color');
         }
     }
     elems.propPanel.innerHTML = html;
@@ -325,45 +328,44 @@ function getBlockName(type) {
 
 function createInput(key, label, value, type = 'text', options = []) {
     if (type === 'select') {
-        const opts = options.map(o => `< option value = "${o}" ${ value === o ? 'selected' : '' }> ${ o }</option > `).join('');
+        const opts = options.map(o => `<option value="${o}" ${value === o ? 'selected' : ''}>${o}</option>`).join('');
         return `
-                < div class="prop-group" >
+            <div class="prop-group">
                 <label>${label}</label>
                 <select class="prop-select" onchange="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
                     ${opts}
                 </select>
-            </div >
-                `;
+            </div>
+        `;
     } else if (type === 'textarea') {
-        // Basic HTML stripping/handling could go here if needed, but for now simple textarea
         return `
-                < div class="prop-group" >
+            <div class="prop-group">
                 <label>${label}</label>
                 <textarea class="prop-textarea" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">${value}</textarea>
-            </div >
-                `;
+            </div>
+        `;
     } else if (type === 'color') {
         return `
-                < div class="prop-group" >
+            <div class="prop-group">
                 <label>${label}</label>
                 <div style="display:flex; align-items:center;">
                     <input type="color" class="prop-color-picker" value="${value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
                 </div>
-            </div >
-                `
+            </div>
+        `;
     } else {
         return `
-                < div class="prop-group" >
+            <div class="prop-group">
                 <label>${label}</label>
                 <input type="${type}" class="prop-input" value="${value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
             </div>
-            `;
+        `;
     }
 }
 
 function createFileOrUrlInput(key, value) {
     return `
-                < div class="prop-group" >
+        <div class="prop-group">
             <label>이미지 소스</label>
             <label class="file-upload-label">
                 <i class="fas fa-cloud-upload-alt"></i> 파일 선택
@@ -371,29 +373,28 @@ function createFileOrUrlInput(key, value) {
             </label>
             <input type="text" class="prop-input" placeholder="또는 이미지 URL 입력" value="${value.startsWith('data:') ? '' : value}" oninput="updateBlockProperty('${state.activeBlockId}', '${key}', this.value)">
         </div>
-            `;
+    `;
 }
 
 function createMultiImageInput(key, values) {
-    // Simplified for MVP: Just add button and list current URLs
-    let html = `< div style = "margin-bottom:10px;" > `;
+    let html = `<div style="margin-bottom:10px;">`;
     values.forEach((v, idx) => {
         html += `
-                < div style = "display:flex; gap:5px; margin-bottom:5px;" >
-                    <img src="${v}" style="width:30px; height:30px; object-fit:cover;">
-                        <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px;">
-                            <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" style="padding:5px;">&times;</button>
-                        </div>
-                        `;
+            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                <img src="${v}" style="width:30px; height:30px; object-fit:cover;">
+                <input type="text" class="prop-input" value="${v.startsWith('data:') ? '(Base64 Image)' : v}" disabled style="font-size:10px;">
+                <button onclick="removeArrayItem('${state.activeBlockId}', '${key}', ${idx})" style="padding:5px;">&times;</button>
+            </div>
+        `;
     });
-                        html += `</div>`;
+    html += `</div>`;
 
     html += `
-                            < label class="file-upload-label" >
-                                <i class="fas fa-plus"></i> 이미지 추가(파일)
-                                    < input type = "file" accept = "image/*" style = "display:none;" onchange = "handleImageUpload(this, '${state.activeBlockId}', '${key}', true)" >
-        </label >
-                `;
+        <label class="file-upload-label">
+            <i class="fas fa-plus"></i> 이미지 추가(파일)
+            <input type="file" accept="image/*" style="display:none;" onchange="handleImageUpload(this, '${state.activeBlockId}', '${key}', true)">
+        </label>
+    `;
     return html;
 }
 
@@ -472,11 +473,24 @@ function setupEventListeners() {
         }
     });
 
+    // Filtering Tabs
+    elems.tabBtns.forEach(btn => {
+        btn.onclick = (e) => {
+            // UI
+            elems.tabBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+
+            // Logic
+            const filter = e.target.innerText; // '전체', '개인', '팀'
+            filterProjects(filter);
+        };
+    });
+
     document.getElementById('btn-create-project').onclick = () => {
         const title = document.getElementById('np-title').value;
         const pwd = document.getElementById('np-password').value;
         const author = document.getElementById('np-author').value;
-        
+
         if (!title) return alert('제목을 입력해주세요.');
         if (pwd.length < 4) return alert('비밀번호 4자리를 입력해주세요.');
         if (!author) return alert('작성자용을 입력해주세요.');
@@ -491,10 +505,10 @@ function setupEventListeners() {
         state.author = author;
         state.category = category;
         state.globalStyle = { backgroundColor: '#C0D8C8' }; // Default Neuromorphic BG
-        
+
         // Load Template
         state.blocks = JSON.parse(JSON.stringify(templates[type]));
-        
+
         elems.newProjectModal.classList.add('hidden');
         elems.globalBgColor.value = '#C0D8C8';
         elems.pageTitleInput.innerText = title;
@@ -523,7 +537,7 @@ function setupEventListeners() {
 
     // Canvas Drop Area
     const canvasArea = document.querySelector('.device-screen');
-    
+
     canvasArea.ondragover = (e) => {
         e.preventDefault(); // Action must normally be prevented to allow drop
         e.dataTransfer.dropEffect = 'copy';
@@ -558,10 +572,10 @@ function setupEventListeners() {
         document.getElementById('np-title').value = '';
         document.getElementById('np-password').value = '';
         document.getElementById('np-author').value = '';
-        
+
         switchToEditorMode();
         elems.newProjectModal.classList.remove('hidden');
-        elems.newProjectModal.style.display = 'flex'; 
+        elems.newProjectModal.style.display = 'flex';
     };
     elems.btnBackDashboard.onclick = () => {
         if (confirm('저장하지 않은 내용은 사라집니다. 대시보드로 돌아가시겠습니까?')) {
@@ -588,6 +602,11 @@ function setupEventListeners() {
 function openSaveModal(isPublish) {
     state.isPublishAction = isPublish;
     document.getElementById('save-modal-title').innerText = state.pageId ? '페이지 수정 확인' : '페이지 저장/발행';
+    if (!state.pageId && state.password) {
+        document.getElementById('save-password').value = state.password;
+    } else {
+        document.getElementById('save-password').value = '';
+    }
     elems.saveModal.classList.remove('hidden');
 }
 
@@ -603,12 +622,13 @@ async function loadDashboard() {
     elems.projectList.innerHTML = '<div class="loading-spinner">Loading...</div>';
 
     try {
-        const res = await fetch(`${ APPS_SCRIPT_URL }?action = list`);
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=list`);
         const json = await res.json();
 
         if (json.status === 'success') {
             state.projectList = json.data;
-            renderProjectList(json.data);
+            // Default filter: All
+            filterProjects('전체');
         } else {
             alert('로드 실패: ' + json.message);
         }
@@ -618,30 +638,59 @@ async function loadDashboard() {
     }
 }
 
+function filterProjects(categoryLabel) {
+    // categoryLabel: '전체', '개인', '팀'
+    // Data category: 'personal', 'team'
+
+    let filtered = [];
+    if (!state.projectList) return;
+
+    if (categoryLabel === '전체') {
+        filtered = state.projectList;
+    } else if (categoryLabel === '개인') {
+        filtered = state.projectList.filter(p => p.category === 'personal');
+    } else if (categoryLabel === '팀') {
+        filtered = state.projectList.filter(p => p.category === 'team');
+    }
+
+    renderProjectList(filtered);
+}
+
 function renderProjectList(list) {
-    if (list.length === 0) {
-        elems.projectList.innerHTML = '<p style="grid-column:1/-1; text-align:center;">생성된 프로젝트가 없습니다.</p>';
+    if (!list || list.length === 0) {
+        elems.projectList.innerHTML = '<p style="grid-column:1/-1; text-align:center;">조건에 맞는 프로젝트가 없습니다.</p>';
         return;
     }
 
-    elems.projectList.innerHTML = list.map(item => `
-                < div class="project-card" onclick = "loadProjectForEdit('${item.id}')" >
+    elems.projectList.innerHTML = list.map(item => {
+        const catBadge = item.category === 'team' ? '<span class="badge team">팀</span>' : '<span class="badge personal">개인</span>';
+
+        return `
+        <div class="project-card" onclick="loadProjectForEdit('${item.id}')">
             <button class="delete-btn-card" onclick="event.stopPropagation(); deleteProject('${item.id}');">
                 <i class="fas fa-trash"></i>
             </button>
-            <div class="card-icon"><i class="fas fa-file-alt"></i></div>
-            <div class="card-info">
-                <h3>${item.title}</h3>
-                <p>${new Date(item.createdAt).toLocaleDateString()}</p>
+            <div class="card-preview">
+                <i class="fas fa-file-alt"></i>
             </div>
-        </div >
-                `).join('');
+            <div class="card-info">
+                ${catBadge}
+                <span class="card-date">${new Date(item.createdAt).toLocaleDateString()}</span>
+                <h3>${item.title}</h3>
+                <p>${item.author || '작자미상'}</p>
+                <div class="card-actions">
+                     <button class="text-btn">편집</button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
 }
 
 async function loadProjectForEdit(id) {
     // Fetch full data
     try {
-        const res = await fetch(`${ APPS_SCRIPT_URL }?action = get & id=${ id } `);
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
         const json = await res.json();
         if (json.status === 'success') {
             const data = JSON.parse(json.data.data);
@@ -736,7 +785,7 @@ async function loadPageData(id) {
         return;
     }
     try {
-        const res = await fetch(`${ APPS_SCRIPT_URL }?action = get & id=${ id } `);
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
         const json = await res.json();
         if (json.status === 'success') {
             const data = JSON.parse(json.data.data);
@@ -755,34 +804,33 @@ async function loadPageData(id) {
 // --- PUBLISH & SHARES ---
 
 function showPublishResult(id) {
-    const url = `${ window.location.origin }${ window.location.pathname }?id = ${ id } `;
+    const url = `${window.location.origin}${window.location.pathname}?id=${id}`;
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
 
-            document.getElementById('share-url').value = url;
-            document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
+    document.getElementById('share-url').value = url;
+    document.getElementById('qr-code-img').innerHTML = `<img src="${qrUrl}" alt="QR Code">`;
 
-            elems.publishModal.classList.remove('hidden');
+    elems.publishModal.classList.remove('hidden');
+}
+
+window.copyUrl = function () {
+    const input = document.getElementById('share-url');
+    input.select();
+    document.execCommand('copy');
+    alert('URL이 복사되었습니다.');
+}
+
+window.downloadQR = function () {
+    const img = document.querySelector('#qr-code-img img');
+    if (img) {
+        const a = document.createElement('a');
+        a.href = img.src;
+        a.download = 'qrcode.png';
+        a.click();
     }
+}
 
-    window.copyUrl = function () {
-        const input = document.getElementById('share-url');
-        input.select();
-        document.execCommand('copy');
-        alert('URL이 복사되었습니다.');
-    }
-
-    window.downloadQR = function () {
-        const img = document.querySelector('#qr-code-img img');
-        if (img) {
-            const a = document.createElement('a');
-            a.href = img.src;
-            a.download = 'qrcode.png';
-            a.click();
-        }
-    }
-
-    // Start
-    document.addEventListener('DOMContentLoaded', () => {
-        init();
-    });
-
+// Start
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});
