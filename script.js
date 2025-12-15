@@ -59,6 +59,7 @@ function init() {
         loadPageData(id);
     } else {
         // Dashboard Mode
+        setupEventListeners();
         switchToDashboardMode();
     }
 }
