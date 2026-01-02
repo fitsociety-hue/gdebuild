@@ -943,18 +943,27 @@ function renderProjectList(list) {
     }).join('');
 }
 
-async function loadProjectForEdit(id) {
+window.loadProjectForEdit = async function (id) {
+    console.log('loadProjectForEdit called with ID:', id);
+
     // Open Verify Modal instead of prompt
     state.pendingEditId = id;
 
     // Safety check if elems wasn't init properly
-    if (!elems.verifyModal) elems.verifyModal = document.getElementById('verify-modal');
-    const pwdInput = document.getElementById('verify-password');
+    const modal = document.getElementById('verify-modal');
+    if (!modal) {
+        alert('Error: Verify Modal element not found in DOM');
+        console.error('Verify Modal not found');
+        return;
+    }
+    elems.verifyModal = modal;
 
+    const pwdInput = document.getElementById('verify-password');
     if (pwdInput) pwdInput.value = '';
-    if (elems.verifyModal) elems.verifyModal.classList.remove('hidden');
-    else alert('Error: Verify Modal not found');
-}
+
+    elems.verifyModal.classList.remove('hidden');
+    elems.verifyModal.style.display = 'flex'; // Force display just in case
+};
 
 async function verifyAndLoad(id, password) {
     try {
