@@ -360,7 +360,33 @@ function renderProperties() {
             html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'list') {
-            html += `<p style="font-size:0.8em; color:#666;">항목 편집은 현재 지원되지 않습니다. (데모)</p>`;
+            html += `<div class="prop-group">
+                <label>사업안내 목록</label>
+                <div id="list-items-container">`;
+
+            block.content.forEach((item, idx) => {
+                html += `
+                    <div class="list-item-editor" style="background:#f8f9fa; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #eee;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span style="font-size:0.8rem; font-weight:bold;">항목 #${idx + 1}</span>
+                            <button class="danger-btn" style="width:auto; padding:2px 8px; font-size:0.8rem;" onclick="deleteListItem('${block.id}', ${idx})">삭제</button>
+                        </div>
+                        <div class="prop-group" style="margin-bottom:10px;">
+                            <label style="font-size:0.8rem;">사업명</label>
+                            <input type="text" class="prop-input" value="${item.label}" oninput="updateListItem('${block.id}', ${idx}, 'label', this.value)">
+                        </div>
+                        <div class="prop-group" style="margin-bottom:0;">
+                            <label style="font-size:0.8rem;">사업설명</label>
+                            <textarea class="prop-textarea" style="min-height:60px;" oninput="updateListItem('${block.id}', ${idx}, 'value', this.value)">${item.value}</textarea>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>
+                <button class="secondary-btn" onclick="addListItem('${block.id}')" style="width:100%; margin-top:5px;"><i class="fas fa-plus"></i> 항목 추가</button>
+            </div>`;
+
             html += renderCommonTextStyleOptions(block);
         }
         else if (block.type === 'map') {
@@ -381,6 +407,31 @@ function renderProperties() {
     }
     elems.propPanel.innerHTML = html;
 }
+
+window.updateListItem = function (id, index, field, value) {
+    const block = state.blocks.find(b => b.id === id);
+    if (!block || !Array.isArray(block.content)) return;
+    block.content[index][field] = value;
+    renderBlocks();
+};
+
+window.addListItem = function (id) {
+    const block = state.blocks.find(b => b.id === id);
+    if (!block || !Array.isArray(block.content)) return;
+    block.content.push({ label: '새 사업명', value: '새 사업설명' });
+    renderBlocks();
+    renderProperties();
+};
+
+window.deleteListItem = function (id, index) {
+    const block = state.blocks.find(b => b.id === id);
+    if (!block || !Array.isArray(block.content)) return;
+    if (confirm('이 항목을 삭제하시겠습니까?')) {
+        block.content.splice(index, 1);
+        renderBlocks();
+        renderProperties();
+    }
+};
 
 function renderCommonTextStyleOptions(block) {
     let s = block.style || {};
@@ -1063,7 +1114,8 @@ async function savePage(password) {
             alert('오류: ' + json.message);
         }
     } catch (e) {
-        alert('네트워크 오류');
+        console.error("Save failed:", e);
+        alert('저장 중 오류가 발생했습니다: ' + e.message);
     } finally {
         elems.btnSaveConfirm.disabled = false;
         elems.btnSaveConfirm.innerText = '확인';
