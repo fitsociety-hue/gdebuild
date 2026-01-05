@@ -1077,14 +1077,115 @@ async function deleteProject(id) {
     }
 }
 
+// IMAGE RESIZE UTILS
+function compressImage(file, maxSizeMB, callback) {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = function (e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Aggressive resizing for Google Sheets (50k char limit)
+            // 30KB image ~= 40k base64 chars
+            let width = img.width;
+            let height = img.height;
+            const MAX_DIM = 800; // Reduced from 2000
+
+            if (width > MAX_DIM || height > MAX_DIM) {
+                if (width > height) {
+                    height *= MAX_DIM / width;
+                    width = MAX_DIM;
+                } else {
+                    width *= MAX_DIM / height;
+                    height = MAX_DIM;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+
+            let quality = 0.7;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+            // Loop to reduce size
+            while (dataUrl.length > maxSizeMB * 1024 * 1024 * 1.33 && quality > 0.3) {
+                quality -= 0.1;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            // If still too big, scale down forcefully
+            if (dataUrl.length > 48000) { // Safety margin for 50k limit
+                const scale = Math.sqrt(48000 / dataUrl.length);
+                canvas.width *= scale;
+                canvas.height *= scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            }
+
+            callback(dataUrl);
+        }
+    }
+}
+
+window.handleImageUpload = function (input, blockId, key, isArray = false) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Use 0.03 MB (approx 30KB) limit to fit in one spreadsheet cell
+    compressImage(file, 0.03, (result) => {
+        if (isArray) {
+            const block = state.blocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            let targetArray;
+            if (key.includes('.')) {
+                // e.g. 'content.images'
+                const keys = key.split('.');
+                if (!block[keys[0]]) block[keys[0]] = {};
+                if (!Array.isArray(block[keys[0]][keys[1]])) block[keys[0]][keys[1]] = [];
+                targetArray = block[keys[0]][keys[1]];
+            } else {
+                if (!Array.isArray(block[key])) block[key] = [];
+                targetArray = block[key];
+            }
+
+            if (targetArray) {
+                targetArray.push(result);
+                renderBlocks();
+                renderProperties();
+            }
+        } else {
+            updateBlockProperty(blockId, key, result);
+            renderProperties();
+            renderBlocks();
+        }
+    });
+};
+
+/* ... existing logic ... */
+
 async function savePage(password) {
+    const dataString = JSON.stringify({
+        blocks: state.blocks,
+        globalStyle: state.globalStyle
+    });
+
+    // Code Optimization: Validation against Database Constraints
+    if (dataString.length > 48000) {
+        alert(`데이터 용량이 너무 큽니다 (${dataString.length} / 48000 자).\n이미지를 줄이거나 텍스트를 줄여주세요.`);
+        elems.btnSaveConfirm.disabled = false;
+        elems.btnSaveConfirm.innerText = '확인';
+        return;
+    }
+
     const payload = {
         action: 'save',
         password: password,
-        data: JSON.stringify({
-            blocks: state.blocks,
-            globalStyle: state.globalStyle
-        }),
+        data: dataString,
         title: state.pageTitle,
         author: state.author,
         category: state.category
@@ -1100,6 +1201,11 @@ async function savePage(password) {
             method: 'POST',
             body: JSON.stringify(payload)
         });
+
+        if (!res.ok) {
+            throw new Error(`HTTP Error: ${res.status}`);
+        }
+
         const json = await res.json();
 
         if (json.status === 'success') {
@@ -1115,34 +1221,36 @@ async function savePage(password) {
         }
     } catch (e) {
         console.error("Save failed:", e);
-        alert('저장 중 오류가 발생했습니다: ' + e.message);
+        if (e.name === 'SyntaxError') {
+            alert('저장 서버 응답 오류입니다 (데이터 큼/권한 부족 가능성). 관리자 문의.');
+        } else {
+            alert('저장 중 오류가 발생했습니다: ' + e.message);
+        }
     } finally {
         elems.btnSaveConfirm.disabled = false;
         elems.btnSaveConfirm.innerText = '확인';
     }
 }
-
-async function loadPageData(id) {
-    if (!APPS_SCRIPT_URL.startsWith('http')) {
-        state.blocks = templates.newsletter;
+if (!APPS_SCRIPT_URL.startsWith('http')) {
+    state.blocks = templates.newsletter;
+    renderBlocks();
+    return;
+}
+try {
+    const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
+    const json = await res.json();
+    if (json.status === 'success') {
+        const data = JSON.parse(json.data.data);
+        state.blocks = data.blocks || [];
+        state.globalStyle = data.globalStyle || { backgroundColor: '#ffffff' };
+        state.pageTitle = json.data.title;
         renderBlocks();
-        return;
+    } else {
+        document.getElementById('viewer-content').innerHTML = '<p>페이지를 찾을 수 없습니다.</p>';
     }
-    try {
-        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
-        const json = await res.json();
-        if (json.status === 'success') {
-            const data = JSON.parse(json.data.data);
-            state.blocks = data.blocks || [];
-            state.globalStyle = data.globalStyle || { backgroundColor: '#ffffff' };
-            state.pageTitle = json.data.title;
-            renderBlocks();
-        } else {
-            document.getElementById('viewer-content').innerHTML = '<p>페이지를 찾을 수 없습니다.</p>';
-        }
-    } catch (e) {
-        document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
-    }
+} catch (e) {
+    document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
+}
 }
 
 function showPublishResult(id) {
