@@ -1156,25 +1156,27 @@ async function savePage(password) {
     }
 }
 async function loadPageData(id) {
-    state.blocks = templates.newsletter;
-    renderBlocks();
-    return;
-}
-try {
-    const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
-    const json = await res.json();
-    if (json.status === 'success') {
-        const data = JSON.parse(json.data.data);
-        state.blocks = data.blocks || [];
-        state.globalStyle = data.globalStyle || { backgroundColor: '#ffffff' };
-        state.pageTitle = json.data.title;
+    if (!APPS_SCRIPT_URL.startsWith('http')) {
+        state.blocks = templates.newsletter;
         renderBlocks();
-    } else {
-        document.getElementById('viewer-content').innerHTML = '<p>페이지를 찾을 수 없습니다.</p>';
+        return;
     }
-} catch (e) {
-    document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
-}
+
+    try {
+        const res = await fetch(`${APPS_SCRIPT_URL}?action=get&id=${id}`);
+        const json = await res.json();
+        if (json.status === 'success') {
+            const data = JSON.parse(json.data.data);
+            state.blocks = data.blocks || [];
+            state.globalStyle = data.globalStyle || { backgroundColor: '#ffffff' };
+            state.pageTitle = json.data.title;
+            renderBlocks();
+        } else {
+            document.getElementById('viewer-content').innerHTML = '<p>페이지를 찾을 수 없습니다.</p>';
+        }
+    } catch (e) {
+        document.getElementById('viewer-content').innerHTML = '<p>로딩 오류</p>';
+    }
 }
 
 function showPublishResult(id) {
