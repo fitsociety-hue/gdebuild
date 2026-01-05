@@ -661,83 +661,7 @@ window.removeArrayItem = function (id, key, index) {
     renderProperties();
 }
 
-// IMAGE RESIZE UTILS
-function compressImage(file, maxSizeMB, callback) {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = function (e) {
-        const img = new Image();
-        img.src = e.target.result;
-        img.onload = function () {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
 
-            const MAX_DIM = 2000;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > MAX_DIM || height > MAX_DIM) {
-                if (width > height) {
-                    height *= MAX_DIM / width;
-                    width = MAX_DIM;
-                } else {
-                    width *= MAX_DIM / height;
-                    height = MAX_DIM;
-                }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(img, 0, 0, width, height);
-
-            let quality = 0.9;
-            let dataUrl = canvas.toDataURL('image/jpeg', quality);
-
-            while (dataUrl.length > maxSizeMB * 1024 * 1024 && quality > 0.1) {
-                quality -= 0.1;
-                dataUrl = canvas.toDataURL('image/jpeg', quality);
-            }
-
-            callback(dataUrl);
-        }
-    }
-}
-
-window.handleImageUpload = function (input, blockId, key, isArray = false) {
-    const file = input.files[0];
-    if (!file) return;
-
-    compressImage(file, 0.5, (result) => {
-        if (isArray) {
-            const block = state.blocks.find(b => b.id === blockId);
-            if (!block) return;
-
-            let targetArray;
-            if (key.includes('.')) {
-                // e.g. 'content.images'
-                const keys = key.split('.');
-                if (!block[keys[0]]) block[keys[0]] = {};
-                // Ensure the nested property is an array
-                if (!Array.isArray(block[keys[0]][keys[1]])) block[keys[0]][keys[1]] = [];
-                targetArray = block[keys[0]][keys[1]];
-            } else {
-                // e.g. 'content' (for gallery)
-                if (!Array.isArray(block[key])) block[key] = [];
-                targetArray = block[key];
-            }
-
-            if (targetArray) {
-                targetArray.push(result);
-                renderBlocks();
-                renderProperties();
-            }
-        } else {
-            updateBlockProperty(blockId, key, result);
-            renderProperties();
-            renderBlocks(); // Refresh block
-        }
-    });
-};
 
 function getNestedProperty(obj, keyPath) {
     return keyPath.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -1231,7 +1155,7 @@ async function savePage(password) {
         elems.btnSaveConfirm.innerText = '확인';
     }
 }
-if (!APPS_SCRIPT_URL.startsWith('http')) {
+async function loadPageData(id) {
     state.blocks = templates.newsletter;
     renderBlocks();
     return;
